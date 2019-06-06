@@ -6,7 +6,7 @@ import re
 import math
 import time
 import ast
-from flair.embeddings import FlairEmbeddings, BertEmbeddings
+from flair.embeddings import FlairEmbeddings, BertEmbeddings, CharacterEmbeddings
 from flair.data import Sentence
 from flair.models import SequenceTagger
 from flair.embeddings import StackedEmbeddings
@@ -16,17 +16,21 @@ from nltk.corpus import stopwords
 import nltk
 #nltk.download('stopwords')
 import string
+import numpy as np
+
 
 
 class DataLoader:
     def __init__(self,
                  base_dir="",
+                 df_extractions_raw_name="",
                  df_extraction_name="",
                  df_ner_ranking_name="",
                  df_arg_ranking_name="",
                  dataset_name=""):
         # self.input_data = None
         self.base_dir = base_dir
+        self.df_extractions_raw_name = df_extractions_raw_name
         self.df_extractions_name = df_extraction_name
         self.df_ner_ranking_name = df_ner_ranking_name
         self.df_arg_ranking_name = df_arg_ranking_name
@@ -57,14 +61,20 @@ class DataLoader:
             print("Unable to open the file at", path_to_file)
 
     # @classmethod
-    def load_extractions(self, path_to_file=""):
+    def load_extractions(self, path_to_file="", pickle_name="flair_res.pkl"):
         if path_to_file:
             print("Loading -> df_extractions")
             self.df_extractions = self.load_csv(path_to_file)
         else:
-            self.df_extractions = self.load_csv(self.base_dir + self.df_extractions_name)
-        PIK = self.base_dir + "flair_res.pkl"
-        self.df_extractions["flair_res"] = self.load_from_pickle_object_list(PIK)
+            path_to_extractions = self.base_dir + self.df_extractions_name
+            if os.path.isfile(path_to_extractions):
+                self.df_extractions = self.load_csv(path_to_extractions)
+            else:
+                path_to_extractions = self.base_dir + self.df_extractions_raw_name
+                self.df_extractions = self.load_csv(path_to_extractions)
+        PIK = self.base_dir + pickle_name
+        if os.path.isfile(PIK):
+            self.df_extractions["flair_res"] = self.load_from_pickle_object_list(PIK)
         return self.df_extractions
 
     def load_ner_ranking(self, path_to_file=""):
@@ -85,6 +95,7 @@ class DataLoader:
 
     def save_to_pickle_object_list(self, data, pickle_name="flair_res.pkl"):
         PIK = self.base_dir + pickle_name
+        print("saving pickle object at:  ", PIK)
         with open(PIK, "wb") as f:
             pickle.dump(len(data), f)
             for value in data:
@@ -101,29 +112,33 @@ class DataLoader:
 class EntityExtractor:
     def __init__(self,
                  base_dir="../data/FakeNews/bridgegate/small_accurate_set/results/rels_v2_with_pronoun/",
-                 df_extraction_name="df_rels_with_ner.csv",
-                 df_ner_ranking_name="Entities_NER_Flair_Ranking_From_Sentences_with_conf.csv",
+                 df_extractions_raw_name="df_rels_with_ner.csv",
+                 df_extraction_name="df_extractions_with_ner.csv",
+                 df_ner_ranking_name="df_ner_ranking.csv",
                  df_arg_ranking_name="df_arg_ranking.csv",
                  dataset_name="bridgegate",
-                 load_all_data=True):
+                 load_all_data=True,
+                 regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
+                 overwrite_ner_ranking=False):
 
         self.data_loader = DataLoader(base_dir,
+                                     df_extractions_raw_name,
                                      df_extraction_name,
                                      df_ner_ranking_name,
                                      df_arg_ranking_name,
                                      dataset_name)
         self.base_dir = base_dir
-        if not load_all_data:
-            return
-
         self.dataset_name = dataset_name
+        self.df_extractions_raw_name = df_extractions_raw_name
         self.df_extraction_name = df_extraction_name
         self.df_ner_ranking_name = df_ner_ranking_name
         self.df_arg_ranking_name = df_arg_ranking_name
-        # self.generate_or_load_flair_tags(overwrite=False) # -> uncomment this if df_extractions does not have flair results
-        self.df_extractions = self.data_loader.load_extractions()
-        self.generate_or_load_ner_ranking(overwrite=False)
-        self.generate_or_load_arg_ranking(just_head_arg=True)
+        if not load_all_data:
+            return
+        self.df_extractions = self.data_loader.load_extractions(self.base_dir + df_extraction_name)
+        self.generate_or_load_flair_tags(regenerate_df_extractions_with_ner_flair_sentences_and_tags=regenerate_df_extractions_with_ner_flair_sentences_and_tags)  # -> uncomment this if df_extractions does not have flair results
+        self.generate_or_load_ner_ranking(self.base_dir + df_ner_ranking_name, overwrite=overwrite_ner_ranking)
+        self.generate_or_load_arg_ranking(self.base_dir + df_arg_ranking_name, just_head_arg=True)
 
 
     @staticmethod
@@ -184,7 +199,7 @@ class EntityExtractor:
         ent = " ".join([w for w in ent.split(" ") if w not in stop_words])
         return ent.strip()
 
-    @staticmethod
+    #@staticmethod
     def get_top_entities(self,
                          df_rels,
                          output_file=None,
@@ -265,57 +280,84 @@ class EntityExtractor:
                                                   output_file=self.base_dir + self.df_arg_ranking_name,
                                                   top_num=-1,
                                                   save_to_file=True,
-                                                  just_head_arg=just_head_arg)
+                                                  just_head_arg=just_head_arg,
+                                                  nouns_only=True)
             self.df_arg_ranking = df_entity_rankings
             end_time = time.time()
             print("df_arg_ranking generation is done. Execution Time: ", (end_time-start_time)/60.0, " minutes.")
 
+    def _get_sentence_space_delimited(self, x):
+        annotation = ast.literal_eval(x["annotation"])
+        return " ".join([str(w) for w in annotation["words"]])
 
-
-    def generate_or_load_flair_tags(self, path_to_file="", overwrite = False):
+    def generate_or_load_flair_tags(self, path_to_file="", regenerate_df_extractions_with_ner_flair_sentences_and_tags=False):
         if not path_to_file:
             path_to_file = self.base_dir + self.df_extraction_name #file_name #+ "_with_flair_res.csv"
-        if os.path.exists(path_to_file) and not overwrite:
-            return self.data_loader.load_extractions(path_to_file)
+        if os.path.exists(path_to_file) and not regenerate_df_extractions_with_ner_flair_sentences_and_tags:
+            self.df_extractions = self.data_loader.load_extractions(path_to_file)
+            return self.df_extractions
         else:
-            print("Setting up the stacked embedding -- Flair (backward/forward) + BERT")
-            tagger = SequenceTagger.load('ner-ontonotes-fast')
-
-            # init Flair embeddings
-            flair_forward_embedding = FlairEmbeddings('multi-forward')
-            flair_backward_embedding = FlairEmbeddings('multi-backward')
-
-            # init multilingual BERT
-            bert_embedding = BertEmbeddings('bert-base-cased')
-
-            # now create the StackedEmbedding object that combines all embeddings
-            stacked_embeddings = StackedEmbeddings(
-                embeddings=[flair_forward_embedding, flair_backward_embedding, bert_embedding])
-
-            print("Generating Flair Sentence Objects")
             df_rels = self.df_extractions.copy()
-
+            print("Generating Flair Sentence Objects")
+            tagger = SequenceTagger.load('ner-ontonotes-fast')
+            #df_rels = self.data_loader.load_extractions(path_to_file)
+            '''
             def get_sentence_space_delimited(x):
                 annotation = ast.literal_eval(x["annotation"])
                 return " ".join([str(w) for w in annotation["words"]])
-
-            df_rels["flair_sentence"] = df_rels.apply(lambda x: Sentence(get_sentence_space_delimited(x)), axis=1)
+            '''
+            df_rels["flair_sentence"] = df_rels.apply(lambda x: Sentence(self._get_sentence_space_delimited(x)), axis=1)
 
             print("Predicting Named Entities and Saving them to ", path_to_file)
-            import time
             start_time = time.time()
 
             res = tagger.predict(df_rels["flair_sentence"])
 
             df_rels["flair_res"] = res
-            df_rels.to_csv(path_to_file)
+            df_rels.to_csv(self.base_dir + "df_extractions_with_ner.csv")
 
-            self.data_loader.save_to_pickle_object_list(res)
+            self.data_loader.save_to_pickle_object_list(res, pickle_name="flair_res.pkl")
             self.df_extractions = df_rels.copy()
             end_time = time.time()
-            print("Tagger Prediction Done: ", end_time - start_time, "(seconds) - ", (end_time - start_time) / 60,
+            print("Flair Sentences + Tagger Prediction Done: ", end_time - start_time, "(seconds) - ", (end_time - start_time) / 60,
                   "(min)")
 
+            '''
+            if regenerate_flair_sentences_and_tags:
+                blah blah
+            else:
+                res = self.data_loader.load_from_pickle_object_list(self.base_dir + "flair_res.pkl")
+            '''
+
+            # If dataset is small and you would like to keep the embeddings into a pkl file, uncomment the following block.
+            '''
+            print("Setting up the stacked embedding --BERT + CharacterEmbeddings")  # Flair (backward/forward) +
+            # Generate embeddings
+            # init Flair embeddings
+            # flair_forward_embedding = FlairEmbeddings('multi-forward')
+            # flair_backward_embedding = FlairEmbeddings('multi-backward')
+            # init multilingual BERT
+            start_time = time.time()
+            bert_embedding = BertEmbeddings('bert-base-cased')
+            character_embeddings = CharacterEmbeddings()
+            # now create the StackedEmbedding object that combines all embeddings
+            # we take bert + character embeddings -> so that we get embeddings in 3k space (character level only adds 50 dimensions. each flair embeddings adds about 2k dimensions)
+            print(len(res))
+            stacked_embeddings = StackedEmbeddings(
+                embeddings=[bert_embedding])#, character_embeddings]) #, flair_forward_embedding, flair_backward_embedding])
+            #stacked_embeddings.embed(res) # this function returns nothing and just updates the "res" with embeddings.
+            bert_embedding.embed(res) ### Crashes if the data is large
+            print("stacked_embedding done, minutes: ", (time.time()-start_time)/60.0)
+            print(len(res))
+            df_rels["flair_res"] = res
+            df_rels.to_csv(self.base_dir + "df_extractions.csv")
+
+            self.data_loader.save_to_pickle_object_list(res, pickle_name="flair_res_characterEmb_Bert.pkl")
+            self.df_extractions = df_rels.copy()
+            end_time = time.time()
+            print("Embed Flair Sentences Done: ", end_time - start_time, "(seconds) - ", (end_time - start_time) / 60,
+                  "(min)")
+            '''
     def generate_or_load_ner_ranking(self, path_to_file="", overwrite=False):
         if not path_to_file:
             path_to_file = self.base_dir + self.df_ner_ranking_name
@@ -368,14 +410,102 @@ class EntityExtractor:
                                                                                            "GPE",
                                                                                            "LAW",
                                                                                            "NORP"])]
-            df_ent_final_ranking = df_ent_final_ranking[["text", "count"]]
+            df_ent_final_ranking = df_ent_final_ranking[["text", "type", "count"]]
             df_ent_final_ranking.rename(columns={'text': 'entity', 'count': 'frequency'}, inplace=True)
-            df_ent_final_ranking.append(self.df_arg_ranking[["entity", "frequency"]])
+            df_arg_ranking_with_type = self.df_arg_ranking.copy()
+            df_arg_ranking_with_type["type"] = "OTHER(ARG)"
+            df_ent_final_ranking = df_ent_final_ranking.append(df_arg_ranking_with_type[["entity", "type", "frequency"]], sort=True)
+            print(df_ent_final_ranking.head(200))
             # u = df_ent_final_ranking["entity"].unique()
             # pd.Series(u).to_csv(ee.base_dir+"df_ent_ranking_unigue.csv")
-            df_ent_final_ranking = df_ent_final_ranking.groupby(by=["entity"]).agg({'frequency': 'sum'}) \
+            df_ent_final_ranking = df_ent_final_ranking.groupby(by=["entity"], as_index=False).agg({'type': 'first', 'frequency': 'sum'}) \
                 .sort_values(['frequency'], ascending=False)
+            df_ent_final_ranking.rename(columns={'frequency': 'frequency_score_sum_NER_arg'}, inplace=True)
             # df_ent_final_ranking["avgFreq"] = (df_ent_final_ranking["frequency"] + df_ent_final_ranking["count"])/2
             # df_ent_final_ranking.to_csv(ee.base_dir + "df_ent_final_ranking.csv")
             # df_ent_final_ranking.sort_values("avgFreq", axis=0, ascending=False, inplace=True, na_position ='last')
-            df_ent_final_ranking.to_csv(self.base_dir + "df_ent_final_ranking.csv")
+            df_ent_final_ranking.to_csv(self.base_dir + "df_ent_final_ranking.csv", index=False)
+            return df_ent_final_ranking
+
+    def get_ent_emb_dict(self, df_ent_final_ranking, only_top_N_entitis = 10, dump_flair_res_to_pickle=False):
+        print("In function: get_ent_emb_dict")
+        os.environ['KMP_DUPLICATE_LIB_OK'] = 'True' #To get rid of this error: OMP: Error #15: Initializing libomp.dylib, but found libiomp5.dylib already initialized.
+        bert_embedding = BertEmbeddings('bert-base-cased')#do_lower_case=False
+        if dump_flair_res_to_pickle:
+            PIK = self.base_dir + "flair_res_embeddings.pkl"
+            print("saving pickle object at:  ", PIK)
+            f = open(PIK, "wb")
+            pickle.dump(len(self.df_extractions), f)
+
+        entities = df_ent_final_ranking["entity"][:only_top_N_entitis]
+        ent_emb_lists = {}
+        ent_has_enough_embs = {}
+        for ind, ent in enumerate(entities):
+            ent_emb_lists[ent] = {"count": 0, "type": df_ent_final_ranking.iloc[ind]["type"], "embeddings": []}
+            ent_has_enough_embs[ent] = False
+
+        cnt_found_entities = 0
+        for ind_row, row in self.df_extractions.iterrows():
+            if ind_row % 500 == 0:
+                print(ind_row)
+            #if ind_row > 1000:
+            #    break
+            has_entity = False
+            for ent in entities:
+                if ent_has_enough_embs[ent]:
+                    continue
+                if ent in row["sentence"].lower():
+                    has_entity = True
+                    break
+            if not has_entity:
+                continue
+            sent_words = [t.text.lower() for t in row["flair_res"]]
+            row_with_embeddings = row["flair_res"]
+            bert_embedding.embed(row_with_embeddings)
+            if dump_flair_res_to_pickle:
+                pickle.dump(row_with_embeddings, f)
+            #sent = self._get_sentence_space_delimited(row)
+            #sent = sent.lower()
+            #sent_words = sent.split(" ")
+            '''
+            Algo:
+            for every word (w) in sentence, find the embedding for entities that start from w.
+            '''
+            for ind_w, w in enumerate(sent_words):
+                for ent in entities:
+                    if ent_has_enough_embs[ent]:
+                        continue
+                    ent_words = ent.split(" ")
+                    ent_embs = []
+                    ent_words_len = len(ent_words)
+                    cnt = 0
+                    while(cnt < ent_words_len):
+                        if ind_w + cnt >= len(sent_words) or sent_words[ind_w+cnt] != ent_words[cnt]:
+                            ent_embs = []
+                            break
+                        else:
+                            #print(ind_w+1)
+                            #print(row_with_embeddings.get_token(ind_w+1))
+                            #print(row_with_embeddings.get_token(ind_w+1).embedding)
+                            # flair get_token function is 1-based -> ind_w + 1 is needed
+                            ent_embs.append(np.array(row_with_embeddings.get_token(ind_w + 1).embedding))
+                        cnt += 1
+                    if len(ent_embs) > 0:
+                        ent_emb_lists[ent]["embeddings"].append(np.mean(ent_embs, axis=0))
+                        ent_emb_lists[ent]["count"] += 1
+                        # let's only take average of some mentions of them (for speed-up purposes)
+                        if ent_emb_lists[ent]["count"] > 0:
+                            ent_has_enough_embs[ent] = True
+                            print(ent , " --- Embedding found.")
+                            cnt_found_entities += 1
+                            print("Number of found entities: ", cnt_found_entities)
+
+        return ent_emb_lists
+
+
+
+    def cluster_top_n_entities(self, df_ent_final_ranking, N=20):
+        entity_emb_dict = {}
+        entity_mark = {}
+        for i in range(N):
+            pass
