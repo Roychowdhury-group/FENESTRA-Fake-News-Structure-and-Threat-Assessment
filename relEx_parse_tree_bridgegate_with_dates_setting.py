@@ -1,12 +1,12 @@
 import os
 import sys
-sys.path.insert(0, './base_codes')
-sys.path.insert(0, './data_specific_codes')
-sys.path.insert(0, './utility_codes')
+sys.path.insert(0, './code/relation_extraction')
+#sys.path.insert(0, './data_specific_codes')
+#sys.path.insert(0, './utility_codes')
 
-from base_codes.RE_init import *
-from base_codes.main_functions import *
-from base_codes.utility_functions import *
+from code.relation_extraction.RE_init import *
+from code.relation_extraction.main_functions import *
+from code.relation_extration.utility_functions import *
 
 '''
 PARAMETERS
@@ -86,7 +86,7 @@ all_rels_str, all_rels, output = text_corpus_to_rels(file_input_arg,
                                                      PRONOUN_RESOLUTION
                                                     )            
 end_time = time.time()
-print "Relation Extraction Time: ", end_time-start_time , "(seconds) - ", (end_time-start_time)/60, "(min)"
+print("Relation Extraction Time: ", end_time-start_time , "(seconds) - ", (end_time-start_time)/60, "(min)")
 print "***************STATISTICS***************"
 #print "Total number of input records (posts): ", len(texts)
 print "Total number of extracted relations: ", len(all_rels_str)

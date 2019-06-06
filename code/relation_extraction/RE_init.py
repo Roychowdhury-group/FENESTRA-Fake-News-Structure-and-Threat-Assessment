@@ -17,8 +17,8 @@ from nltk.stem import SnowballStemmer
 import nltk
 import numpy as np
 from collections import defaultdict
-from main_functions import *
-from utility_functions import *
+from .main_functions import *
+from .utility_functions import *
 from collections import Counter
 import os
 import string
