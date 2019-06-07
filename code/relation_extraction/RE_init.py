@@ -1,7 +1,8 @@
 import time # to calculate the annotation time
 import re # regular expression
 import networkx as nx # to calculate the shortest path between nodes in the parsing tree
-from practnlptools.tools import Annotator # to extract dep_parse, syntatic_parse, srl, verbs, words, POS, NER, chunks
+#from practnlptools.tools import Annotator # to extract dep_parse, syntatic_parse, srl, verbs, words, POS, NER, chunks
+from pntl.tools import Annotator
 import pandas as pd
 from datetime import datetime, timedelta
 import csv

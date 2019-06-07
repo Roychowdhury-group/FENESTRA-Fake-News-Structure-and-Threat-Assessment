@@ -20,7 +20,26 @@ Data can be accessed from this [link](https://oneshare.cdlib.org/stash/dataset/d
 * pandas, numpy, networkx, etc
 * Flair, nltk, ...
 
+## Notes
+relation extraction - required packages:
+
+1. 'practnlptools'
+
+
 ## Installation
+
+---
+Approach 1 - revising the original practNLPTools
+1. Download "practNLPTools" -- revised version for python3 from [here]()
+Go to the downloaded folder, and run:
+```bash
+sudo python setup.py install
+```
+
+---
+Approach 2 - adopting to a newer version
+
+
 1. Install required packages
 ```bash
 $ pip install ...
