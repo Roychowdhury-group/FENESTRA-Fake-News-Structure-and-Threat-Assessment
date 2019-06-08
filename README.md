@@ -39,6 +39,31 @@ sudo python setup.py install
 ---
 Approach 2 - adopting to a newer version
 
+---
+Approach 3 - Let's start fresh!
+Step-1: Install required packages:
+```
+pip install networkx pntl pandas matplotlib nxpd ipython nltk pycorenlp
+```
+
+To download required filed for pntl tools, open a terminal and run:  
+```bash
+sudo pntl -I true
+```
+
+
+
+Step-2: Download Stanford CoreNLP package, and run it as a server locally.
+
+```bash
+wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip
+unzip stanford-corenlp-full-2018-10-05.zip
+cd stanford-corenlp-full-2018-10-05
+java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer
+```
+
+
+
 
 1. Install required packages
 ```bash
@@ -49,6 +74,13 @@ $ pip install ...
 ```bash
 Java -m ...
 ```
+
+### Notes
+Note-1: notes related to pntl package 
+If you get "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed" error, then if you are using Python 3.6 on Mac OS, you can fix it by running the following command:
+/Applications/Python\ 3.6/Install\ Certificates.command
+Read more about this error at this [StackOverflow Thread](https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error):
+
 
 ## Run
 
@@ -69,3 +101,6 @@ DATASET="bridgegate"
 ```bash
 paper bib ref
 ```
+
+## Installation Notes
+If you are using Python 3.6 on Mac OS, you may need to run the following command

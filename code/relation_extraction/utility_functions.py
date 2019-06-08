@@ -1,4 +1,4 @@
-from .RE_init import *
+from RE_init import *
 import string
 from collections import Counter
 #from collections import Counter

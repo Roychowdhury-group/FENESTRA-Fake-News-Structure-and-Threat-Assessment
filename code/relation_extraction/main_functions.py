@@ -1,6 +1,6 @@
-from .RE_init import *
-from .utility_functions import *
-from pronoun_resolution_functions import *
+from RE_init import *
+from utility_functions import *
+#from pronoun_resolution_functions import *
 from pycorenlp import StanfordCoreNLP
 from collections import Counter
 import collections
@@ -1629,21 +1629,24 @@ def text_corpus_to_rels(file_input_arg,
         sents = {}
         coref_map_rep={}
         core_map_mens={}
-        try:
-            for i in range(len(t_sentences)):
-                annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True)
-                g_dirs[i + 1] = create_dep_graph(annots[i + 1])
-                sents[i + 1] = t_sentences[i]
-            coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
-        except:
-            pass
+        #try:
+        for i in range(len(t_sentences)):
+            #annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True) # for practNLPtools
+            #for pracNLPtools-lite
+            annots[i + 1] = annotator.get_annoations(t_sentences[i], dep_parse=True)
+            g_dirs[i + 1] = create_dep_graph(annots[i + 1])
+            sents[i + 1] = t_sentences[i]
+        coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
+        #except:
+        #    pass
         for t_ind, t in enumerate(t_sentences):
             try:
                 if LOAD_ANNOTATIONS:
                     t_annotated = df.iloc[ind]["annotation"]
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
-                    t_annotated = annotator.getAnnotations(t, dep_parse=True)
+                    #t_annotated = annotator.getAnnotations(t, dep_parse=True)
+                    t_annotated = annotator.get_annoations(t, dep_parse=True)
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
