@@ -62,7 +62,14 @@ cd stanford-corenlp-full-2018-10-05
 java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer
 ```
 
+Step-3: Download practNLPTools package from [here]() and just run "sudo python setup.py install" in its folder.
 
+---
+
+
+Step-4: Add the pntl folder into your path
+
+Note: pntl fails when quatation is present (so we remove " from the data)
 
 
 1. Install required packages

@@ -1581,7 +1581,10 @@ def text_corpus_to_rels(file_input_arg,
         header = df.columns.values.tolist() + header#[h for h in header if h not in ["sentence"]]
     dict_writer = csv.DictWriter(f_rel, header)
     dict_writer.writeheader()#writerow(header)    
-    
+
+    #pntl-lite
+    #annotator = Annotator(senna_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/tmp_packages/practNLPTools-master-2-for-python3/practnlptools",
+    #                      stp_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/tmp_packages/practNLPTools-master-2-for-python3/practnlptools")#Annotator()
     annotator = Annotator()
     all_rels_str = []
     all_rels = []
@@ -1630,12 +1633,18 @@ def text_corpus_to_rels(file_input_arg,
         coref_map_rep={}
         core_map_mens={}
         #try:
+        #'''
+        #annots = annotator.get_annoations(t_sentences, dep_parse=True)
         for i in range(len(t_sentences)):
-            #annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True) # for practNLPtools
+            annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True) # for practNLPtools
             #for pracNLPtools-lite
-            annots[i + 1] = annotator.get_annoations(t_sentences[i], dep_parse=True)
+            #annots[i + 1] = annotator.get_annoations([t_sentences[i]], dep_parse=True)
             g_dirs[i + 1] = create_dep_graph(annots[i + 1])
             sents[i + 1] = t_sentences[i]
+        #'''
+        #annots = annotator.get_annoations(t_sentences, dep_parse=True)
+
+
         coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
         #except:
         #    pass
@@ -1646,7 +1655,8 @@ def text_corpus_to_rels(file_input_arg,
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
                     #t_annotated = annotator.getAnnotations(t, dep_parse=True)
-                    t_annotated = annotator.get_annoations(t, dep_parse=True)
+                    #t_annotated = annotator.get_annoations(t, dep_parse=True)
+                    t_annotated = annots[t_ind+1]
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
