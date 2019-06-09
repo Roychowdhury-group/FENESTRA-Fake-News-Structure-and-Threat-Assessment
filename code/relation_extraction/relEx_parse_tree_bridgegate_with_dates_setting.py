@@ -1,8 +1,6 @@
 import os
 import sys
-sys.path.insert(0, './code/relation_extraction')
-#sys.path.insert(0, './data_specific_codes')
-#sys.path.insert(0, './utility_codes')
+
 
 from RE_init import *
 from main_functions import *
@@ -66,8 +64,6 @@ output = []
 
 start_time = time.time()
 
-print("----------------Start--------------")
-
 all_rels_str, all_rels, output = text_corpus_to_rels(file_input_arg,
                                                      DATA_SET,
                                                      INPUT_DELIMITER,
@@ -88,10 +84,10 @@ all_rels_str, all_rels, output = text_corpus_to_rels(file_input_arg,
                                                      PRONOUN_RESOLUTION
                                                     )            
 end_time = time.time()
-print(("Relation Extraction Time: ", end_time-start_time , "(seconds) - ", (end_time-start_time)/60, "(min)"))
-print("***************STATISTICS***************")
+print "Relation Extraction Time: ", end_time-start_time , "(seconds) - ", (end_time-start_time)/60, "(min)"
+print "***************STATISTICS***************"
 #print "Total number of input records (posts): ", len(texts)
-print("Total number of extracted relations: ", len(all_rels_str))
+print "Total number of extracted relations: ", len(all_rels_str)
 print_top_relations(all_rels_str,output_dir_arg+input_fname+'_top_rels_'+ str(MAX_ITERATION) + '.txt',top_num=-1) 
 df_rels = pd.DataFrame(all_rels)
 df_output = pd.DataFrame(output)

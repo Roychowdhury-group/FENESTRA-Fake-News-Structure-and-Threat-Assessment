@@ -5,7 +5,7 @@ from collections import Counter
 #import pandas as pd
 
 def read_data(file_input,dataset="twitter",delim=",", LOAD_ANNOTATIONS=False):
-    print(file_input)
+    print file_input
     if dataset == "twitter-v0":      
         ff = open(file_input)
         h = ff.readline()
@@ -19,8 +19,8 @@ def read_data(file_input,dataset="twitter",delim=",", LOAD_ANNOTATIONS=False):
         #df_selected.values_counts()
         #print len(df_selected.index)
         df_selected = df_selected.dropna(how = 'any')
-        print("Number of instances: ")    
-        print(len(df_selected.index))
+        print "Number of instances: "    
+        print len(df_selected.index)
         #print " selected dataframe - index 0 : ", df_selected.iloc[0]
         return df_selected
     
@@ -82,7 +82,7 @@ def save_pairwise_rels(file_loc,g,print_option=True):
                     line = str(n1) + "\t" + str(n2) + "\t" + str(l) + "\n"
                     f.write(line)
                     if print_option:
-                        print(n1,n2,l)    
+                        print n1,n2,l    
     f.close()
 def plot_argument_graph(g, path_to_file=None):
     A = nx.nx_agraph.to_agraph(g)
@@ -130,20 +130,20 @@ def plot_dep(g,title):
     
 def print_relations(rels):
     if len(rels) < 1:
-        print("No extraction.")
+        print "No extraction."
         return
     for ind,r in enumerate(rels):
-        print(">Extraction Number: ",ind+1, " - ", "Pattern: ", r["type"]," - relation : (", r["arg1"], ", ", r["rel"], ", ", r["arg2"] ,")")
+        print ">Extraction Number: ",ind+1, " - ", "Pattern: ", r["type"]," - relation : (", r["arg1"], ", ", r["rel"], ", ", r["arg2"] ,")"
         if "arg1_prepositions" in r and "rel_prepositions" in r and "arg2_prepositions" in r:
             if r["arg1_prepositions"]:
-                print(" arg1_prep: ", r["arg1_prepositions"], end=' ')
+                print " arg1_prep: ", r["arg1_prepositions"],
             if r["rel_prepositions"]:
-                print(" rel_prep: ", r["rel_prepositions"], end=' ')
+                print " rel_prep: ", r["rel_prepositions"],
             if r["arg2_prepositions"]:
-                print(" arg2_prep: ", r["arg2_prepositions"])   
+                print " arg2_prep: ", r["arg2_prepositions"]   
             #print "----- Extra: arg1_prep: ", r["arg1_prepositions"], " rel_prep: ", r["rel_prepositions"], " arg2_prep: ", r["arg2_prepositions"] ,"\n\n"
 
-        print("\n\n")
+        print "\n\n"
 
 def get_rels_str(rels):
     if len(rels) < 1:
@@ -165,31 +165,31 @@ def print_top_relations(all_rels,output_file, top_num=-1):
     for r in all_rels:
         cnt[r] += 1
     if top_num == -1: # means print all
-        print("Frequent relations:", file=f)
+        print >>f, "Frequent relations:"
         for letter,count in cnt.most_common():
-            print(letter, ": ", count, file=f)
+            print >>f, letter, ": ", count
     else:
-        print("top ", top_num, " frequent relations:", file=f)
+        print >>f, "top ", top_num, " frequent relations:"
         for letter,count in cnt.most_common(top_num):
-            print(letter, ": ", count, file=f)                 
+            print >>f, letter, ": ", count                 
 
 def save_pairwise_relations_with_node_selection(df_rels,entity_versions,output_file):
     f = open(output_file, 'w')
     cnt = Counter()
     for entity in entity_versions:
-        print("-------------------------", file=f)
-        print("       ", entity, file=f)
-        print("-------------------------", file=f)    
+        print >>f, "-------------------------"
+        print >>f, "       ", entity
+        print >>f, "-------------------------"    
         for ent_one_version in entity_versions[entity]:
-            print("\n\n**** ", ent_one_version, " ****", file=f)
+            print >>f, "\n\n**** ", ent_one_version, " ****"
             df_all_versions = defaultdict(list)
             df_one_version = df_rels[np.logical_or(df_rels['arg1'].str.contains(ent_one_version),df_rels['arg2'].str.contains(ent_one_version))]
             list_one_version = df_one_version['rel'].tolist()
             for r in list_one_version:
                 cnt[r] += 1
-            print("Frequent relations:", file=f)
+            print >>f, "Frequent relations:"
             for letter,count in cnt.most_common():
-                print(letter, ": ", count, file=f)             
+                print >>f, letter, ": ", count             
 
 def rel_to_stemRel(r):
     stemmer = SnowballStemmer("english")
@@ -378,7 +378,7 @@ def get_relation_versions_reverse_mapping(dataset="dream"):
     relation_versions = get_relation_versions(dataset)
     relation_versions_reverse_mapping = defaultdict(list)
     
-    for rel_glob_name, rel_version_list in relation_versions.items():
+    for rel_glob_name, rel_version_list in relation_versions.iteritems():
         for ind in range(len(rel_version_list)):
             relation_versions_reverse_mapping[rel_version_list[ind]] = rel_glob_name 
     
@@ -394,7 +394,7 @@ def get_relation_versions(dataset="dream"):
         
         
     # make everything lower case
-    for rel_glob_name, rel_version_list in relation_versions.items():
+    for rel_glob_name, rel_version_list in relation_versions.iteritems():
         for ind in range(len(rel_version_list)):
             rel_version_list[ind] = rel_version_list[ind].lower()
             
@@ -779,7 +779,7 @@ def get_entity_versions(dataset="mothering"):
         
     
     # make everything lower case
-    for ent_glob_name, ent_version_list in entity_versions.items():
+    for ent_glob_name, ent_version_list in entity_versions.iteritems():
         for ind in range(len(ent_version_list)):
             ent_version_list[ind] = ent_version_list[ind].lower()
     
@@ -947,19 +947,19 @@ def create_equivalent_dict(df_is_rels, main_ent_name, ent_version_list):
         
     
 def save_entity_sorted_equivalents(dict_main_ent_equiv, main_ent_name, f):    
-    print("*" * 60, file=f)
-    print("*" * ((59-len(main_ent_name))/2), main_ent_name, "*" * ((59-len(main_ent_name))/2), file=f)
+    print >>f, "*" * 60
+    print >>f, "*" * ((59-len(main_ent_name))/2), main_ent_name, "*" * ((59-len(main_ent_name))/2)
     #print "**************************   ", main_ent_name, "   **************************"
-    print("*" * 60, file=f)
-    print("", file=f)
-    for s in sorted(iter(dict_main_ent_equiv.items()), key=lambda x_y1: x_y1[1]['count'], reverse=True):
-        print(s[0], "->", s[1]["count"], file=f)
-        print("-" * 60, file=f)
+    print >>f, "*" * 60
+    print >>f, ""
+    for s in sorted(dict_main_ent_equiv.iteritems(), key=lambda (x, y): y['count'], reverse=True):
+        print >>f, s[0], "->", s[1]["count"]
+        print >>f, "-" * 60
         #print s[1]
         #print s[1]["versions"]
-        for s_versions in sorted(iter(s[1]["versions"].items()), key=lambda x_y: x_y[1], reverse=True):
-            print(s_versions, file=f)
-        print("", file=f)    
+        for s_versions in sorted(s[1]["versions"].iteritems(), key=lambda (x,y): y, reverse=True):
+            print >>f, s_versions
+        print >>f, ""    
         
 def write_df_to_csv(path_with_file_name, df_input, header=None):
     if header is None:

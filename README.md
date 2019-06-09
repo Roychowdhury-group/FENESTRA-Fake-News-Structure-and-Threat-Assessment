@@ -14,25 +14,31 @@ This work consists of two main components:
  
 Note: In an on-going work, we are transferring all the implementations to python 3.
  
-### Installation -- First Component -- Relation Extraction:
+### Installation -- First Component: Relation Extraction:
  
 Required python: python 2.7
 
 Step-1: Install required packages:
 ```
-pip install networkx pntl pandas matplotlib nxpd ipython nltk pycorenlp
+pip install networkx pandas matplotlib nxpd ipython nltk pycorenlp
 ```
 
-Step-2: Download Stanford CoreNLP package, and run it as a server locally.
+Step-2: [Download](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip) the Stanford CoreNLP package, unzip it, and run the following command inside the unzipped folder:
 
 ```bash
-wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip
-unzip stanford-corenlp-full-2018-10-05.zip
-cd stanford-corenlp-full-2018-10-05
-java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer
+java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000
 ```
 
-Step-3: Download practNLPTools package from [here]() and just run "sudo python setup.py install" in its folder.
+Step-3: [Download](https://github.com/biplab-iitb/practNLPTools/archive/master.zip) practNLPTools package, and run "sudo python setup.py install" in the downloaded folder.
+
+Step-4: Modify the parameters in "relEx_parse_tree.py" according to the data your input data.
+Feel free to take a look at the settings we used for Bridgegate and Pizzagate experiments.
+
+Step-5: run
+
+```bash
+python relEx_parse_tree.py "path_to_input_file" "output_directory"
+```
 
 
 ## Run

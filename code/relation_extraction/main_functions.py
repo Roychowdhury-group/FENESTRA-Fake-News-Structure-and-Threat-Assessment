@@ -1,6 +1,5 @@
 from RE_init import *
 from utility_functions import *
-#from pronoun_resolution_functions import *
 from pycorenlp import StanfordCoreNLP
 from collections import Counter
 import collections
@@ -19,7 +18,7 @@ def word_to_node_id(verbs_list, verb_ind, annotation):
         return "ROOT-NNP-0"
     verb_occurance_num = verbs_list[0:verb_ind+1].count(word)
     i = -1
-    for j in range(verb_occurance_num):
+    for j in xrange(verb_occurance_num):
         i = annotation['words'].index(word, i+1)
     w_ind = i 
     return word+"-"+annotation['pos'][w_ind][1]+"-"+str(w_ind+1) 
@@ -40,7 +39,7 @@ def sort_word_ids(word_ids, head_word_ind):
     word_sorted_str = ""
     word_with_pos_sorted_str = ""
     
-    word_ids_tuple = [(word_id_get_index(x),x) for x in word_ids]
+    word_ids_tuple = map(lambda x: (word_id_get_index(x),x), word_ids)
     word_ids_tuple.sort(key = lambda x: x[0]) #sort based on the first element - which is word's index
     for w in word_ids_tuple:
         if int(w[0]) == int(head_word_ind):
@@ -105,7 +104,7 @@ def expand_node_id(node_id, g_dir, node_type="arg", rel_type="SVO",EXTRACT_NESTE
     except:
         ##print "Faild to get adjacency network of ", node_id, " while expanding it."
         return
-    for word_id, e in g_dir_v.items():
+    for word_id, e in g_dir_v.iteritems():
         if e["rel"] in expansion_list:
             if e["rel"] == "prep_of" or e["rel"] == "prepc_of":
                 new_word_id = "of " + word_id.split("-")[0] + "-" + word_id.split("-")[1] + "-" + word_id.split("-")[2]
@@ -199,7 +198,7 @@ def expand_rel(rel, g_dir, EXTRACT_NESTED_PREPOSITIONS_RELS,ADD_EXTRAS=False):
         except:
             ##print "Faild to get adjacency network of ", v_arg_id, " while expanding it."
             continue
-        for word_id, e in g_dir_v.items():
+        for word_id, e in g_dir_v.iteritems():
             if e["rel"] in arg_expand_list_final:
                 if e["rel"] == "prep_of" or e["rel"] == "prepc_of":
                     new_word_id = "of " + word_id.split("-")[0] + "-" + word_id.split("-")[1] + "-" + word_id.split("-")[2]
@@ -231,7 +230,7 @@ def expand_rel(rel, g_dir, EXTRACT_NESTED_PREPOSITIONS_RELS,ADD_EXTRAS=False):
         pass
         ##print "Faild to get adjacency network of ", v_rel_id, " while expanding it."
     if g_dir_v is not None:
-        for word_id, e in g_dir_v.items():
+        for word_id, e in g_dir_v.iteritems():
             if e["rel"] in rel_expand_list_final:
                 rel_extra_ids.append(word_id)
         
@@ -276,7 +275,7 @@ def get_nested_preposition_rels(g_dir, main_word_id, expansion_list):
     if g_dir_v is not None:                
         # extract the head words of nested relations (the ones connected with prepositions)
 
-        for word_id, e in g_dir_v.items():
+        for word_id, e in g_dir_v.iteritems():
             single_nested_rel = defaultdict(list)
             if "prep_" in e["rel"] or "prepc_" in e["rel"]:
                 if e["rel"] == "prep_of" or e["rel"] == "prepc_of": #skip the preposition of
@@ -295,7 +294,7 @@ def get_nested_preposition_rels(g_dir, main_word_id, expansion_list):
                     continue
                     #print "Faild to get adjacency network of ", nested_rel_head_id, " while extracting nested relations."
                 
-                for word_id_nested, e_nested in g_dir_v_nested.items():
+                for word_id_nested, e_nested in g_dir_v_nested.iteritems():
                     if e_nested["rel"] in expansion_list:
                         single_nested_rel_ids.append(word_id_nested)
                 nested_rel_final_word_str, nested_rel_final_with_pos_str = sort_word_ids(single_nested_rel_ids, nested_rel_head_ind)
@@ -472,7 +471,7 @@ def findHeader(WordIds,g_dir): #given WordIDs, returns head
         if lens[i]==min_val:
             if str(finalw[i]).find('NN')>-1 or str(finalw[i]).find('PRP')>-1 :
                 return finalw[i]
-
+    #######TODO: check here if you are willing to change anythin
     # for word in finalw:
     #     if word!=finalw[ind] and finalw[ind] and word!='':
     #         try:
@@ -563,7 +562,7 @@ def get_conj_and_rels(rel, rel_expanded, g_dir, annotation):
             ##print "Faild to get adjacency network of ", main_word_id, " while expanding it."
             pass
         if g_dir_v is not None:
-            for word_id, e in g_dir_v.items():
+            for word_id, e in g_dir_v.iteritems():
                 if "conj_and" in e["rel"]:
                     has_own_obj = False
                     has_own_subj = False
@@ -599,7 +598,7 @@ def get_conj_and_rels(rel, rel_expanded, g_dir, annotation):
                         if nested_rel_head_id not in v_ids:
                             continue
                         expansion_list = get_expansion_list(nested_rel_head_id, "rel", "SVO")
-                    for word_id_nested, e_nested in g_dir_v_nested.items():
+                    for word_id_nested, e_nested in g_dir_v_nested.iteritems():
                         if "rel" == field:
                             if e_nested["rel"] == "nsubj" or e_nested["rel"] == "xsubj" or e_nested["rel"] == "nsubjpass" or e_nested["rel"] == "xsubjpass":
                                 has_own_subj = True
@@ -651,7 +650,7 @@ def get_conj_and_rels(rel, rel_expanded, g_dir, annotation):
     #nested_rels_str.strip()    
     return list_conj_and_rels, list_conj_and_rels_simp
 
-
+## TODO: Instead of parsing the output string, we should extract these rels from the original dep tree.
 def parse_rel_prepositions(rel_prep):
     res = []
     res_entry = defaultdict(list)
@@ -750,7 +749,7 @@ def get_sv_rels(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS):
         subj_list = []
         subj_list_type = []
         has_subj_edge_only = True
-        for word_id, e in g_dir_v.items(): 
+        for word_id, e in g_dir_v.iteritems(): 
             if e["rel"] == "nsubj" or e["rel"] == "nsubjpass" or e["rel"] == "xsubj" or e["rel"] == "xsubjpass":
                 subj_list.append(word_id)
                 subj_list_type.append(e["rel"])
@@ -918,7 +917,7 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
 
         subj_list_type = [] #nsubj, nsubjpass, xsubjpass
         prep_list_type = [] #prep_ , prepc
-        for word_id, e in g_dir_v.items():
+        for word_id, e in g_dir_v.iteritems():
             if e["rel"] == "nsubj" or e["rel"] == "xsubj" or e["rel"] == "nsubjpass" or e["rel"] == "xsubjpass":
                 nsubj_list.append(word_id)
                 subj_list_type.append(e["rel"])
@@ -1003,7 +1002,7 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                 rel["rel"] = rel["AM-NEG"] + " " + rel["rel"]
             if not setHeaderSRL:
                 rel["arg1"] = "{" + rel.pop("A0") + "}"
-                rel["arg2"] = "{" + rel.pop("A1") + "}"
+                rel["arg2"] = "{" + rel.pop("A1") + "}" #TODO: need to add A2 appended to A1 in case we need
                 rel["type"] = "SRL"
                 rel["pattern"] = "(srl-A0, srl-v, srl-A1)"
                 relations.append(rel.copy())
@@ -1111,7 +1110,7 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
         cop_list = []
         nsubj_list = []
         subj_list_type = [] #nsubj, nsubjpass, xsubjpass
-        for word_id, e in g_dir_n.items():
+        for word_id, e in g_dir_n.iteritems():
             if e["rel"] == "nsubj" or e["rel"] == "xsubj" or e["rel"] == "nsubjpass" or e["rel"] == "xsubjpass":
                 nsubj_list.append(word_id)
                 subj_list_type.append(e["rel"])
@@ -1280,7 +1279,7 @@ def glob_version(entity, entity_versions):
     flag_head_matches = False
     entity_no_bracket = entity_new.replace("{","").replace("}","")
     #iterate through the dictionary
-    for ent_glob_name, ent_version_list in entity_versions.items():
+    for ent_glob_name, ent_version_list in entity_versions.iteritems():
         #iterate through each of the entity version lists
         for entv_item in ent_version_list:
             #separate each entity version into separate words
@@ -1297,7 +1296,7 @@ def glob_version(entity, entity_versions):
     # if head noun does not matche, then find the longest entity version in the 
     if not flag_head_matches:
         entv_max_len = 0
-        for ent_glob_name, ent_version_list in entity_versions.items():
+        for ent_glob_name, ent_version_list in entity_versions.iteritems():
             for entv_item in ent_version_list:
                 if entv_item in entity_no_bracket:
                     entv_item_as_separate_words = False
@@ -1344,7 +1343,7 @@ def getCorefMAp(output_1,annots,g_dirs,sents):
             WordIds=[]
             try:
                 if j['isRepresentativeMention']:
-                    main=findWordIDs(sents[j['sentNum']],annots[j['sentNum']],j['startIndex'],j['text'],j['sentNum'],False)
+                    main=findWordIDs(sents[j['sentNum']],annots[j['sentNum']],j['startIndex'],j['text'],j['sentNum'],False) #TODO: add all words and mark header
                     coref_map_rep[i] = main
 
                 else:
@@ -1553,7 +1552,7 @@ def text_corpus_to_rels(file_input_arg,
     try:
         texts = df[text_col_name].tolist()
     except:
-        print("Invalid input! You should have either 'text' or 'sentence' as one of the input headers.")
+        print "Invalid input! You should have either 'text' or 'sentence' as one of the input headers."
         return
     
     output_prefix = output_dir_arg + input_fname
@@ -1581,10 +1580,7 @@ def text_corpus_to_rels(file_input_arg,
         header = df.columns.values.tolist() + header#[h for h in header if h not in ["sentence"]]
     dict_writer = csv.DictWriter(f_rel, header)
     dict_writer.writeheader()#writerow(header)    
-
-    #pntl-lite
-    #annotator = Annotator(senna_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/tmp_packages/practNLPTools-master-2-for-python3/practnlptools",
-    #                      stp_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/tmp_packages/practNLPTools-master-2-for-python3/practnlptools")#Annotator()
+    
     annotator = Annotator()
     all_rels_str = []
     all_rels = []
@@ -1618,7 +1614,7 @@ def text_corpus_to_rels(file_input_arg,
                 t_sentences = [t_orig]
         except:
             if PRINT_EXCEPTION_ERRORS:
-                print("Error in sentence tokenizer! - ", t_orig)
+                print "Error in sentence tokenizer! - ", t_orig
         output_1={}
         try:
             output_1 = nlp.annotate(str(t_orig), properties={'annotators': 'coref', 'outputFormat': 'json'})
@@ -1632,31 +1628,21 @@ def text_corpus_to_rels(file_input_arg,
         sents = {}
         coref_map_rep={}
         core_map_mens={}
-        #try:
-        #'''
-        #annots = annotator.get_annoations(t_sentences, dep_parse=True)
-        for i in range(len(t_sentences)):
-            annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True) # for practNLPtools
-            #for pracNLPtools-lite
-            #annots[i + 1] = annotator.get_annoations([t_sentences[i]], dep_parse=True)
-            g_dirs[i + 1] = create_dep_graph(annots[i + 1])
-            sents[i + 1] = t_sentences[i]
-        #'''
-        #annots = annotator.get_annoations(t_sentences, dep_parse=True)
-
-
-        coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
-        #except:
-        #    pass
+        try:
+            for i in range(len(t_sentences)):
+                annots[i + 1] = annotator.getAnnotations(t_sentences[i], dep_parse=True)
+                g_dirs[i + 1] = create_dep_graph(annots[i + 1])
+                sents[i + 1] = t_sentences[i]
+            coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
+        except:
+            pass
         for t_ind, t in enumerate(t_sentences):
             try:
                 if LOAD_ANNOTATIONS:
                     t_annotated = df.iloc[ind]["annotation"]
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
-                    #t_annotated = annotator.getAnnotations(t, dep_parse=True)
-                    #t_annotated = annotator.get_annoations(t, dep_parse=True)
-                    t_annotated = annots[t_ind+1]
+                    t_annotated = annotator.getAnnotations(t, dep_parse=True)
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
@@ -1669,34 +1655,34 @@ def text_corpus_to_rels(file_input_arg,
                     all_sents_and_annots.append([post_num_tmp, sentence_num_tmp, t, t_annotated])
             except:
                 if PRINT_EXCEPTION_ERRORS:
-                    print("Error in sentence annotation")
+                    print "Error in sentence annotation"
                 continue
             try:
                 g_dir = create_dep_graph(t_annotated)
                 if g_dir is None:
                     if PRINT_EXCEPTION_ERRORS:
-                        print("No extraction found")
+                        print "No extraction found"
                     continue
                 if SHOW_DP_PLOTS:
                     plot_dep(g_dir,t)
                 g_undir = g_dir.to_undirected()
             except:
                 if PRINT_EXCEPTION_ERRORS:
-                    print("Unexpected error while extracting relations:", sys.exc_info()[0])
+                    print "Unexpected error while extracting relations:", sys.exc_info()[0]
                 continue
             rels_pure, rels_simp = get_relations(g_dir, t_annotated, EXTRACT_NESTED_PREPOSITIONS_RELS, option="SVO",setHeaderSRL=True,t_orig=t)
             rels_pure = addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESOLUTION)
             rels_pure = resolveDuplicates(rels_pure)
             rels = rels_pure
             if SHOW_REL_EXTRACTIONS:
-                print(ind, t, "\n")
-                print("Simplifided Version:")
+                print ind, t, "\n"
+                print "Simplifided Version:"
                 print_relations(rels)
-                print("More detailed Version:")
+                print "More detailed Version:"
                 print_relations(rels_pure)
             else:
                 if ind % 1000 == 0:
-                    print(ind, end=' ')
+                    print ind,
             all_rels_str = all_rels_str + get_rels_str(rels) #For simply counting the exact strings
             all_rels = all_rels + rels # to later create a dataframe
             for r in rels:
@@ -1762,7 +1748,7 @@ def text_corpus_to_rels(file_input_arg,
     #'''            
     #if SAVE_ALL_RELS:
     if len(missing_headers) > 0:
-        print("\n%%%%%% NOTE -> headers needed to be added: ", missing_headers , " %%%%%%\n")
+        print "\n%%%%%% NOTE -> headers needed to be added: ", missing_headers , " %%%%%%\n"
         columns = ['sentence','arg1','rel','arg2','type','pattern','arg1_with_pos','rel_with_pos','arg2_with_pos']
         columns = columns + srl_headers + list(missing_headers)
         if KEEP_ORDER_OF_EXTRACTIONS:
@@ -1793,7 +1779,7 @@ def rels_to_network(df_rels,
         # get the list of different versions of an entity. Example : parents,parent,i,we -> parents
         entity_versions = get_entity_versions(DATA_SET)
         df_simp = get_simp_df(df_rels.copy(),entity_versions)  
-        selected_nodes = list(entity_versions.keys())
+        selected_nodes = entity_versions.keys()
         df_rels_selected = filter_nodes(df_simp.copy(),source='arg1',target='arg2',selected_nodes = selected_nodes)
         if SAVE_DF_SELECTED:
             df_rels_selected.to_csv(output_dir_arg + input_fname + "_" + "selected_relations.csv",sep=',', encoding='utf-8',header=True, columns=df_rels_selected.columns.tolist())
