@@ -25,6 +25,7 @@ import string
 import ast
 import json
 from networkx.readwrite.json_graph import node_link_data
+from tqdm import tqdm
 
 try:
     from networkx.drawing.nx_agraph import graphviz_layout

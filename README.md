@@ -20,7 +20,7 @@ Required python: python 2.7
 
 Step-1: Install required packages:
 ```
-pip install networkx pandas matplotlib nxpd nltk pycorenlp enum34
+pip install networkx pandas matplotlib nxpd nltk pycorenlp enum34 tqdm
 ```
 
 Step-2: [Download](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip) the Stanford CoreNLP package, unzip it, and run the following command inside the unzipped folder:
@@ -58,3 +58,13 @@ DATASET="bridgegate"
 ```bash
 paper bib ref
 ```
+
+## FAQ
+Question 1: 
+- I ran the relation extraction pipeline with the pronoun resolution task, and the output is empty, with no errors!
+- Did you run the StanfordCoreNLP server on port 9000?
+- Yes
+- Did you?
+- Yes
+- Really?
+- Sorry, I forgot! Thanks!

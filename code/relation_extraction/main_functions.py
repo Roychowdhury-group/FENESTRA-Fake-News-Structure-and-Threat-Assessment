@@ -8,7 +8,7 @@ import json
 from networkx.readwrite.json_graph import node_link_data
 from collections import OrderedDict
 import unicodedata
-
+from tqdm import tqdm
 
 
 nlp = StanfordCoreNLP('http://localhost:9000')
@@ -1586,7 +1586,7 @@ def text_corpus_to_rels(file_input_arg,
     all_rels = []
     output = []
     all_sents_and_annots = []
-    for ind, t_orig in enumerate(texts):
+    for ind, t_orig in enumerate(tqdm(texts, ascii=True, desc="Relation Extraction From Each Post")):
         if DATA_SET=="bridgegate_with_dates" and ind == 242: #post 242 causes memory issues "kill 9" error.
             continue
         #print ind, " "
@@ -1642,7 +1642,7 @@ def text_corpus_to_rels(file_input_arg,
                     t_annotated = df.iloc[ind]["annotation"]
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
-                    t_annotated = annotator.getAnnotations(t, dep_parse=True)
+                    t_annotated = annots[t_ind]#annotator.getAnnotations(t, dep_parse=True)
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
@@ -1680,9 +1680,9 @@ def text_corpus_to_rels(file_input_arg,
                 print_relations(rels)
                 print "More detailed Version:"
                 print_relations(rels_pure)
-            else:
-                if ind % 1000 == 0:
-                    print ind,
+            #else:
+            #    if ind % 1000 == 0:
+            #        print ind,
             all_rels_str = all_rels_str + get_rels_str(rels) #For simply counting the exact strings
             all_rels = all_rels + rels # to later create a dataframe
             for r in rels:
