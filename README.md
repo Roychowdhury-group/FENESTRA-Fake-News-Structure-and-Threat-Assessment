@@ -81,7 +81,6 @@ python3.6 main.py
 ```bash
 paper bib ref
 ```
-
 ## Notes
 **Note-1**
 - If you run the relation extraction pipeline with the pronoun resolution task, and the output is empty, with no errors! Then, make sure you are running the StanfordCoreNLP server on port 9000.
