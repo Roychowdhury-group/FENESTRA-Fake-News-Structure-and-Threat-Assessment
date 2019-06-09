@@ -47,8 +47,12 @@ python2.7 relEx_parse_tree.py "path_to_input_file" "output_directory"
 ```
 
 **Outputs**
-1. A csv file with sentences and their relationships
-
+1. A csv file with sentences, relationships, relationship types, and more metadata (This is the main file which will be used in the next components) -- Output Name: INPUT_NAME_relations_MAX_ITERATION.csv 
+2. A txt file with ranking of the relationships (based on simple exact matching) -- Output Name: INPUT_NAME_top_rels_MAX_ITERATION.txt
+3. A csv file with sentences and their annotations (to be used for ) -- Output Name: INPUT_NAME_sentences_and_annotations_MAX_ITERATION.csv
+4. A txt file with pairwise relationships of selected entities (you can hand pick entities of interest by populating the "entity_versions" dictionary in "utility_functions.py") -- Output Name: INPUT_NAME_pairwise_rels_selected_MAX_ITERATION_DATASET.txt
+5. A json file with pairwise relationships formatted to be visualized in d3 js library -- Output Name: INPUT_NAME_g_arg_selected_MAX_ITERATION_EndTimeTimestamp.json
+6. A gexf file with pairwise relationships formatted to be visualized in Gephi -- Output Name: INPUT_NAME_g_arg_selected_MAX_ITERATION_EndTimestamp.gexf
 ### Installation -- Second Component: Entity Extraction
 
 Required python version: python 3.6+
@@ -67,14 +71,14 @@ python3.6 main.py
 ```
 
 **Outputs**
-- Ranking of Named entities with their type, average over the confidence score of their mentions
-- Ranking of the head words in the arguments
-- A final ranking which combines the above ranking 
-- Assign a contextualized embedding (average over BERT embeddings of their mentions) for top N actants in the final entity ranking
-- Visualize top ranked entities in a 2D plot projected by PCA
-- Store embeddings (and their meta data) in csv files align with TensorBoard's input formats
-- Generate a time plot which visualizes how many entities are introduced to the story daily
-- Provide a supplementary csv file for the time-plot which shows the entity names that got introduced daily, their associate post, and the sentence in which we detected their first presence.
+1. Ranking of Named entities with their type, average over the confidence score of their mentions
+2. Ranking of the head words in the arguments
+3. A final ranking which combines the above ranking 
+4. Assign a contextualized embedding (average over BERT embeddings of their mentions) for top N actants in the final entity ranking
+5. Visualize top ranked entities in a 2D plot projected by PCA
+6. Store embeddings (and their meta data) in csv files align with TensorBoard's input formats
+7. Generate a time plot which visualizes how many entities are introduced to the story daily
+8. Provide a supplementary csv file for the time-plot which shows the entity names that got introduced daily, their associate post, and the sentence in which we detected their first presence.
 
 
 ## Reference
