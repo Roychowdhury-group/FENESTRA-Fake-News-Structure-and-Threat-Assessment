@@ -77,17 +77,6 @@ python3.6 main.py
 - Provide a supplementary csv file for the time-plot which shows the entity names that got introduced daily, their associate post, and the sentence in which we detected their first presence.
 
 
-[comment]: <> (### Installation -- Third Component: Aggregation
-## Run
-```bash
-./run.sh
-```
-## Parameters
-Name of input dataset:
-```bash
-DATASET="bridgegate"
-```
-)
 ## Reference
 ```bash
 paper bib ref
