@@ -20,7 +20,7 @@ Required python: python 2.7
 
 Step-1: Install required packages:
 ```
-pip install networkx pandas matplotlib nxpd ipython nltk pycorenlp
+pip install networkx pandas matplotlib nxpd nltk pycorenlp enum34
 ```
 
 Step-2: [Download](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip) the Stanford CoreNLP package, unzip it, and run the following command inside the unzipped folder:
