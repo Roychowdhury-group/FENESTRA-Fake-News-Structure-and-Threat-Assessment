@@ -13,7 +13,7 @@ SEPARATE_SENT = True
 SHOW_DP_PLOTS = False
 SHOW_REL_EXTRACTIONS = False
 NODE_SELECTION = True
-MAX_ITERATION = 1 #-1 -> to try all
+MAX_ITERATION = 0 #-1 -> to try all
 SAVE_GEFX = True
 SAVE_G_JSON = True
 SAVE_PAIRWISE_RELS = True
@@ -93,7 +93,7 @@ df_rels = pd.DataFrame(all_rels)
 df_output = pd.DataFrame(output)
 
 #print df_rels.head()
-#'''
+'''
 rels_to_network(df_rels,
                 input_fname,
                 output_dir_arg,
@@ -107,7 +107,7 @@ rels_to_network(df_rels,
                 SAVE_DF_SELECTED,
                 PATH_TO_SAVED_ARG_GRAPH = output_dir_arg               
                )
-#'''
+'''
 #if __name__ == "__main__":
 #    main(sys.argv[1:])
 #'''
