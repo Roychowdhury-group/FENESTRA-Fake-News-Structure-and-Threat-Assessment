@@ -62,7 +62,7 @@ class DataLoader:
 
     # @classmethod
     def load_extractions(self, path_to_file="", pickle_name="flair_res.pkl"):
-        if path_to_file:
+        if path_to_file and os.path.isfile(path_to_file):
             print("Loading -> df_extractions")
             self.df_extractions = self.load_csv(path_to_file)
         else:
@@ -117,7 +117,6 @@ class EntityExtractor:
                  df_ner_ranking_name="df_ner_ranking.csv",
                  df_arg_ranking_name="df_arg_ranking.csv",
                  dataset_name="bridgegate",
-                 load_all_data=True,
                  regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
                  overwrite_ner_ranking=False):
 
@@ -133,8 +132,8 @@ class EntityExtractor:
         self.df_extraction_name = df_extraction_name
         self.df_ner_ranking_name = df_ner_ranking_name
         self.df_arg_ranking_name = df_arg_ranking_name
-        if not load_all_data:
-            return
+        #if not load_all_data:
+        #    return
         self.df_extractions = self.data_loader.load_extractions(self.base_dir + df_extraction_name)
         self.generate_or_load_flair_tags(regenerate_df_extractions_with_ner_flair_sentences_and_tags=regenerate_df_extractions_with_ner_flair_sentences_and_tags)  # -> uncomment this if df_extractions does not have flair results
         self.generate_or_load_ner_ranking(self.base_dir + df_ner_ranking_name, overwrite=overwrite_ner_ranking)
@@ -388,8 +387,8 @@ class EntityExtractor:
             print(df_ner_formatted.head())
             df_ner_sorted = df_ner_formatted.groupby(by=["text", "type"]).agg({'start_pos':'size', 'confidence':'mean'}) \
                                                         .rename(columns={'start_pos':'count','confidence':'mean_confidence'}) \
-                                                         .sort_values(['count'], ascending=False).to_csv(path_to_file)
-
+                                                         .sort_values(['count'], ascending=False).reset_index()
+            df_ner_sorted.to_csv(path_to_file)
             self.df_ner_ranking = df_ner_sorted.copy()
             return self.df_ner_ranking
 
@@ -493,7 +492,7 @@ class EntityExtractor:
                     if len(ent_embs) > 0:
                         ent_emb_lists[ent]["embeddings"].append(np.mean(ent_embs, axis=0))
                         ent_emb_lists[ent]["count"] += 1
-                        # let's only take average of some mentions of them (for speed-up purposes)
+                        # let's only take average of some mentions of them (for speed-up purposes) -- remove the followin if condition to average over all the entity mentions
                         if ent_emb_lists[ent]["count"] > 0:
                             ent_has_enough_embs[ent] = True
                             print(ent , " --- Embedding found.")
@@ -501,11 +500,3 @@ class EntityExtractor:
                             print("Number of found entities: ", cnt_found_entities)
 
         return ent_emb_lists
-
-
-
-    def cluster_top_n_entities(self, df_ent_final_ranking, N=20):
-        entity_emb_dict = {}
-        entity_mark = {}
-        for i in range(N):
-            pass
