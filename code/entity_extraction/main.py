@@ -252,6 +252,13 @@ def get_entity_versions_reverse_mapping(dataset="bridgegate_entity_trends"):
     return entity_versions_reverse_mapping
 
 def _get_main_persons(base_dir, entity_min_freq):
+    '''
+    To overlap our entity list with an entity list provided by a news page -- just for experimentations -- didn't use the results in the paper.
+    :param base_dir:
+    :param entity_min_freq:
+    :return:
+    '''
+
     path_to_nytimes = base_dir + "timeline_online_txt_only.rtf"
     import codecs
     f = codecs.open(path_to_nytimes, "r", "utf-8")
@@ -267,7 +274,7 @@ def _get_main_persons(base_dir, entity_min_freq):
     df_persons.to_csv(base_dir + "df_persons_join_nytimes_" + str(entity_min_freq) + ".csv")
 
 
-def experiment_visualize_first_mention_of_entities(base_dir, create_new_ents_dict=False):
+def experiment_visualize_first_mention_of_entities(base_dir, input_file_name, create_new_ents_dict=False):
     #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/data_with_dates/"
     vis = visualizer(base_dir)
     entity_min_freq = 10
@@ -286,9 +293,11 @@ def experiment_visualize_first_mention_of_entities(base_dir, create_new_ents_dic
             num_selected_ents -= 1
     '''
 
+    '''
     print(" get main persons ...")
     _get_main_persons(base_dir, entity_min_freq)
     print("done.")
+    '''
 
     #entity_versions = get_entity_versions(dataset="bridgegate_entity_trends")
     #entity_versions = get_entity_versions(dataset="bridgegate_entity_trends_full_names")
@@ -304,15 +313,72 @@ def experiment_visualize_first_mention_of_entities(base_dir, create_new_ents_dic
     '''
 
     if create_new_ents_dict:
-        vis.create_first_mention_of_entities_dict(input_file_name="bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning.csv", entity_versions=entity_versions, output_name=new_ent_dict_name, generate_df_with_dates=True)
+        vis.create_first_mention_of_entities_dict(input_file_name, entity_versions=entity_versions, output_name=new_ent_dict_name, generate_df_with_dates=True)
 
     vis.visualize_new_ents_dict(path_to_new_ent_dict, output_post_fix_name="minFreq_"+str(entity_min_freq))
 
 
+def experiment_main_generate_ent_rankings(base_dir,
+                                          df_extraction_raw_name="bridgate_minimal_clean_text_relations_-1.csv",
+                                          df_extraction_name="df_extractions_with_ner.csv",
+                                          df_ner_ranking_name="df_ner_ranking.csv",
+                                          df_arg_ranking_name="df_arg_ranking.csv",
+                                          dataset_name="bridgegate",
+                                          load_all_data=True,
+                                          regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
+                                          overwrite_ner_ranking=False
+                                          ):
+    ee = EntityExtractor(base_dir,
+                            df_extraction_raw_name,
+                            df_extraction_name,
+                            df_ner_ranking_name,
+                            df_arg_ranking_name,
+                            dataset_name,
+                            regenerate_df_extractions_with_ner_flair_sentences_and_tags,
+                            overwrite_ner_ranking
+                            )
+
+    df_ent_final_ranking = ee.generate_or_load_final_ent_ranking(path_to_file= base_dir + "df_ent_final_ranking.csv", overwrite=overwrite_ner_ranking)
+    print(df_ent_final_ranking.head())
+
+    start_time = time.time()
+    ent_emb_lists = ee.get_ent_emb_dict(df_ent_final_ranking, only_top_N_entitis=NUMBER_OF_ENTITIES_TO_CLUSTER)
+    print("entity embedding generation done - execution time: ", (time.time()-start_time)/60.0)
+    print("entity lists:", ent_emb_lists.keys())
+    ent_single_emb_lists = {}
+    for ent_name, ent_cnt_and_emb in ent_emb_lists.items():
+        ent_single_emb_lists[ent_name] = {}
+        ent_single_emb_lists[ent_name]["type"] = ent_cnt_and_emb["type"]
+        ent_single_emb_lists[ent_name]["count"] = ent_cnt_and_emb["count"]
+        ent_single_emb_lists[ent_name]["embedding"] = np.mean(ent_cnt_and_emb["embeddings"], axis=0)
+        #ent_single_emb_lists[ent_name] = (ent_cnt_and_emb["type"],ent_cnt_and_emb["count"], np.mean(ent_cnt_and_emb["embeddings"], axis=0))
+
+    print(ent_single_emb_lists)
+    PIK = base_dir + "entity_embedding_dict_top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER) + ".pkl"
+    print("saving pickle object at:  ", PIK)
+    with open(PIK, "wb") as f:
+        pickle.dump(ent_single_emb_lists, f, protocol=pickle.HIGHEST_PROTOCOL)
+    #'''
+
 if __name__ == '__main__':
     #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/rels_v2_with_pronoun/"
-    base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/data_with_dates_v2_clean/"
-    experiment_visualize_first_mention_of_entities(base_dir, create_new_ents_dict=True)
+    #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/data_with_dates_v2_clean/"
+    base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/"
+
+    '''
+    experiment_main_generate_ent_rankings(base_dir,
+                                          df_extraction_raw_name="bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning_with_sorted_datetime_relations_1.csv",
+                                          df_extraction_name="df_extractions_with_ner_1.csv",
+                                          df_ner_ranking_name="df_ner_ranking_1.csv",
+                                          df_arg_ranking_name="df_arg_ranking_1.csv",
+                                          dataset_name="bridgegate_with_dates",
+                                          regenerate_df_extractions_with_ner_flair_sentences_and_tags=True,
+                                          overwrite_ner_ranking=True
+                                          )
+    '''
+    experiment_visualize_first_mention_of_entities(base_dir, input_file_name="bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning_with_sorted_datetime.csv", create_new_ents_dict=True)
+
+
 
 
     #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/Pizzagate/relationship_results/rels_v2_with_pronoun/ner_8_classes/"
