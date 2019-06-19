@@ -37,8 +37,8 @@ Then [download](https://github.com/biplab-iitb/practNLPTools/archive/master.zip)
 java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000
 ```
 
-**Step-3**: Modify the parameters in "relEx_parse_tree.py" according to the data your input data.
-Feel free to take a look at the settings we used for Bridgegate and Pizzagate experiments.
+**Step-3**: Modify the parameters in "relEx_parse_tree.py" according to your input data.
+Feel free to take a look at the settings we used for Bridgegate and Pizzagate experiments. 
 
 **Step-4**: Run the following command to extract relationships:
 
@@ -62,7 +62,7 @@ Step-1: Install required packages:
 pip install -r requirements_python3.txt
 ```
 
-**Step-2**: Set Parameters
+**Step-2**:  Modify the parameters in "main.py". Information about the parameters are commented in the code.
 
 **Step-3**: run the following command:
 
