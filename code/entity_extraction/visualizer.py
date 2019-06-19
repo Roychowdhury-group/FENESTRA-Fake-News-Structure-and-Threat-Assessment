@@ -143,6 +143,7 @@ class visualizer:
     def create_first_mention_of_entities_dict(self, input_file_name, entity_versions, output_name = "dict_new_ents_per_date.pkl", generate_df_with_dates=False):
         if generate_df_with_dates:
             #df_with_dates = pd.read_csv("/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/data_with_dates/relationship_results/bridgegate_minimal_orig_text_with_dates_relations_-1.csv")
+            print("input file: ",self.base_dir + input_file_name)
             df_with_dates = pd.read_csv(self.base_dir + input_file_name, encoding = "ISO-8859-1")
             df_with_dates.dropna(subset=['date'], inplace=True)
             #experiment: only take the ones with closure in them. 'closures', 'closure', 'the lane closures', 'the lane closings'
@@ -151,7 +152,10 @@ class visualizer:
             print("number of posts with closure/lane closures/etc keywords: ", len(df_with_dates))
             if "sentence" not in set(df_with_dates.columns):
                 df_with_dates.rename(columns={"file_num":"post_num"}, inplace=True)
-                df_with_dates["date"] = df_with_dates["date"].apply(lambda x: datetime.strptime(x, '%m/%d/%y'))
+                try:
+                    df_with_dates["date"] = df_with_dates["date"].apply(lambda x: datetime.strptime(x, '%m/%d/%y'))
+                except:
+                    df_with_dates["date"] = df_with_dates["date"].apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
             else:
                 df_with_dates["date"] = df_with_dates["date"].apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
 
