@@ -83,7 +83,7 @@ python3.6 main.py
 
 ## Reference
 ```bash
-Tangherlini, Timothy; Roychowdhury, Vwani; Shahsavary, Shadi; Shahbazi, Behnam; Ebrahimzadeh, Ehsan (2019), An Automated Pipeline for the Discovery of Conspiracy and Conspiracy Theory Narrative Frameworks -- processed data, v2, UC Los Angeles Dash, Dataset, https://doi.org/10.5068/D1V665
+Tangherlini, Timothy; Roychowdhury, Vwani; Shahsavari, Shadi; Shahbazi, Behnam; Ebrahimzadeh, Ehsan (2019), An Automated Pipeline for the Discovery of Conspiracy and Conspiracy Theory Narrative Frameworks -- processed data, v2, UC Los Angeles Dash, Dataset, https://doi.org/10.5068/D1V665
 ```
 ## Notes
 **Note-1**
