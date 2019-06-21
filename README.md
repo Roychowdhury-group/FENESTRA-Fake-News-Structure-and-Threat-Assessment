@@ -38,7 +38,7 @@ java -mx8g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000
 ```
 
 **Step-3**: Modify the parameters in "relEx_parse_tree.py" according to your input data.
-Feel free to take a look at the settings we used for Bridgegate and Pizzagate experiments. 
+Feel free to take a look at the settings we used for Bridgegate and Pizzagate experiments. For example you need to set the "INPUT_DELIMITER" parameter to be "," when you feed a csv file, and set it to "\n" when feeding a txt file which the inputs are separated by new lines. 
 
 **Step-4**: Run the following command to extract relationships:
 
@@ -57,7 +57,7 @@ python2.7 relEx_parse_tree.py "path_to_input_file" "output_directory"
 
 Required python version: python 3.6+
 
-Step-1: Install required packages:
+**Step-1**: Install required packages:
 ```bash
 pip install -r requirements_python3.txt
 ```
@@ -77,7 +77,7 @@ python3.6 main.py
 4. Assign a contextualized embedding (average over BERT embeddings of their mentions) for top N actants in the final entity ranking
 5. Visualize top ranked entities in a 2D plot projected by PCA
 6. Store embeddings (and their meta data) in csv files align with TensorBoard's input formats
-7. Generate a time plot which visualizes how many entities are introduced to the story daily
+7. Generate a time plot which visualizes how many entities are introduced to the story daily -- In this experiment we consider the fullname of entities (which follows the format of entity_first_name + space + entity_last_name) because first names and last names could be common among multiple persons, however, fullnames are most likely unique.  
 8. Provide a supplementary csv file for the time-plot which shows the entity names that got introduced daily, their associate post, and the sentence in which we detected their first presence.
 
 
