@@ -28,8 +28,11 @@ Or alternatively install the following packages:
 ```
 pip install networkx pandas matplotlib nxpd nltk pycorenlp enum34 tqdm
 ```
-Then [download](https://github.com/biplab-iitb/practNLPTools/archive/master.zip) practNLPTools package, and run "sudo python setup.py install" in the downloaded folder.
-
+Step-1.1 [download](https://github.com/biplab-iitb/practNLPTools/archive/master.zip) practNLPTools package, and run "sudo python setup.py install" in the downloaded folder.
+Step-1.2 Please use the NLTK Downloader to obtain the nltk-punkt resource which is used for sentence tokenizing. 
+```bash
+python -m nltk.downloader punkt
+```
 
 **Step-2**: [Download](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip) the Stanford CoreNLP package, unzip it, and run the following command inside the unzipped folder:
 
