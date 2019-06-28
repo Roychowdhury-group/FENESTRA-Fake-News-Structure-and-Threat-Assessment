@@ -18,95 +18,32 @@ import math
 #%reload_ext autoreload
 #%autoreload 2
 
-NUMBER_OF_ENTITIES_TO_CLUSTER = 130
+#base directory where you load input files, and save output files
+BASE_DIR = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/"
+# dataset name
+DATASET = "bridgegate_with_dates"
+# relationship file name
+RELATIONSHIPS_RAW_NAME = "bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning_with_sorted_datetime_relations_1.csv"
 
-def main():
-    base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/rels_v2_with_pronoun/"
-    ee = EntityExtractor(base_dir=base_dir,
-                            df_extraction_raw_name="bridgate_minimal_clean_text_relations_-1.csv",
-                            df_extraction_name="df_extractions_with_ner.csv",
-                            df_ner_ranking_name="df_ner_ranking.csv",#"Entities_NER_Flair_Ranking_From_Sentences_with_conf.csv",
-                            df_arg_ranking_name="df_arg_ranking.csv",
-                            dataset_name="bridgegate",
-                            load_all_data=True,
-                            regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
-                            overwrite_ner_ranking=False
-                            )
+## If this is the first time running this code, then keep the following names as it is, and these files will get generated
+# processed relationship file name which contains NER taggs
+DF_EXTRACTION_NAME = "df_extractions_with_ner_1.csv"
+# name of the dataframe (and csv file) which contains ranking of the named entities
+DF_NER_RANKING_NAME = "df_ner_ranking_1.csv"
+# name of the dataframe (and csv file) which contains ranking of the argument headwords
+DF_ARG_RANKING_NAME = "df_arg_ranking_1.csv"
 
-    '''
-    df_ext = ee.data_loader.load_extractions(base_dir + "df_extractions_sample.csv", pickle_name="flair_res_sample.pkl")
-    row = df_ext.iloc[0]
-    print(row["flair_res"].get_token(1).embedding)
-    '''
+# Turn this to file, if you have already generated the ner tags, and have ``flair sentences" -- to save some computations
+REGENERATE_DF_EXTRACTIONS_WITH_NER_FLAIR_SENTENCES_AND_TAGS = True
 
-    #'''
+# "TRUE" -> to overwrite the NER ranking.
+OVERWRITE_NER_RANKING = True
 
-    df_ent_final_ranking = ee.generate_or_load_final_ent_ranking(path_to_file= base_dir + "df_ent_final_ranking.csv", overwrite=False)
-    print(df_ent_final_ranking.head())
-
-    start_time = time.time()
-    ent_emb_lists = ee.get_ent_emb_dict(df_ent_final_ranking, only_top_N_entitis=NUMBER_OF_ENTITIES_TO_CLUSTER)
-    print("entity embedding generation done - execution time: ", (time.time()-start_time)/60.0)
-    print(ent_emb_lists.keys())
-    ent_single_emb_lists = {}
-    for ent_name, ent_cnt_and_emb in ent_emb_lists.items():
-        ent_single_emb_lists[ent_name] = {}
-        ent_single_emb_lists[ent_name]["type"] = ent_cnt_and_emb["type"]
-        ent_single_emb_lists[ent_name]["count"] = ent_cnt_and_emb["count"]
-        ent_single_emb_lists[ent_name]["embedding"] = np.mean(ent_cnt_and_emb["embeddings"], axis=0)
-        #ent_single_emb_lists[ent_name] = (ent_cnt_and_emb["type"],ent_cnt_and_emb["count"], np.mean(ent_cnt_and_emb["embeddings"], axis=0))
-
-    print(ent_single_emb_lists)
-    PIK = base_dir + "entity_embedding_dict_top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER) + ".pkl"
-    print("saving pickle object at:  ", PIK)
-    with open(PIK, "wb") as f:
-        pickle.dump(ent_single_emb_lists, f, protocol=pickle.HIGHEST_PROTOCOL)
-    #'''
+# NUMBER OF ENTITIES FOR CLUSTERING
+NUMBER_OF_ENTITIES_TO_CLUSTER = 50 #130 -> for the paper
 
 
-def main_pizzagate():
-    base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/Pizzagate/relationship_results/rels_v2_with_pronoun/ner_8_classes/"
-    ee = EntityExtractor(base_dir=base_dir,
-                            df_extractions_raw_name="fakenewspizzagate_relations_-1.csv",
-                            df_extraction_name="df_extractions_with_ner.csv",#"df_rels_with_ner.csv",
-                            df_ner_ranking_name="df_ner_ranking.csv",#"Entities_NER_Flair_Ranking_From_Sentences_with_conf.csv",
-                            df_arg_ranking_name="df_arg_ranking.csv",
-                            dataset_name="pizzagate",
-                            load_all_data=True,
-                            regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
-                            overwrite_ner_ranking=False)
-
-    '''
-    df_ext = ee.data_loader.load_extractions(base_dir + "df_extractions_sample.csv", pickle_name="flair_res_sample.pkl")
-    row = df_ext.iloc[0]
-    print(row["flair_res"].get_token(1).embedding)
-    '''
-
-    #'''
-    df_ent_final_ranking = ee.generate_or_load_final_ent_ranking(path_to_file= base_dir + "df_ent_final_ranking.csv", overwrite=True)
-    print(df_ent_final_ranking.head())
-
-    start_time = time.time()
-    ent_emb_lists = ee.get_ent_emb_dict(df_ent_final_ranking, only_top_N_entitis=NUMBER_OF_ENTITIES_TO_CLUSTER)
-    print("entity embedding generation done - execution time: ", (time.time()-start_time)/60.0)
-    print(ent_emb_lists.keys())
-    ent_single_emb_lists = {}
-    for ent_name, ent_cnt_and_emb in ent_emb_lists.items():
-        ent_single_emb_lists[ent_name] = {}
-        ent_single_emb_lists[ent_name]["type"] = ent_cnt_and_emb["type"]
-        ent_single_emb_lists[ent_name]["count"] = ent_cnt_and_emb["count"]
-        ent_single_emb_lists[ent_name]["embedding"] = np.mean(ent_cnt_and_emb["embeddings"], axis=0)
-        #ent_single_emb_lists[ent_name] = (ent_cnt_and_emb["type"],ent_cnt_and_emb["count"], np.mean(ent_cnt_and_emb["embeddings"], axis=0))
-
-    print(ent_single_emb_lists)
-    PIK = base_dir + "entity_embedding_dict_top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER) + ".pkl"
-    print("saving pickle object at:  ", PIK)
-    with open(PIK, "wb") as f:
-        pickle.dump(ent_single_emb_lists, f, protocol=pickle.HIGHEST_PROTOCOL)
-    #'''
-
-
-def cluster_entities(base_dir, file_postfix):
+def generate_avg_embeddings_for_entities_tensorboard_format(base_dir, file_postfix):
     file_prefix = "entity_embedding_dict_"
     file_name = file_prefix + file_postfix + ".pkl"
     path_to_file = base_dir +  file_name
@@ -299,9 +236,6 @@ def experiment_visualize_first_mention_of_entities(base_dir, input_file_name, cr
     print("done.")
     '''
 
-    #entity_versions = get_entity_versions(dataset="bridgegate_entity_trends")
-    #entity_versions = get_entity_versions(dataset="bridgegate_entity_trends_full_names")
-
     entity_versions = generate_entity_versions_automatically(base_dir, entity_version_pickle_name="entity_versions_auto_generated.pkl",min_freq = entity_min_freq, overwrite=True)
     '''
     entity_versions_reverse_mapping = get_entity_versions_reverse_mapping(dataset="bridgegate_entity_trends")
@@ -324,7 +258,6 @@ def experiment_main_generate_ent_rankings(base_dir,
                                           df_ner_ranking_name="df_ner_ranking.csv",
                                           df_arg_ranking_name="df_arg_ranking.csv",
                                           dataset_name="bridgegate",
-                                          load_all_data=True,
                                           regenerate_df_extractions_with_ner_flair_sentences_and_tags=False,
                                           overwrite_ner_ranking=False
                                           ):
@@ -361,52 +294,30 @@ def experiment_main_generate_ent_rankings(base_dir,
     #'''
 
 if __name__ == '__main__':
-    #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/rels_v2_with_pronoun/"
-    #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/bridgegate/small_accurate_set/results/data_with_dates_v2_clean/"
-    base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/Fenestra/FENESTRA-Fake-News-Structure-and-Threat-Assessment/data/"
+
+    base_dir = BASE_DIR
 
     '''
     experiment_main_generate_ent_rankings(base_dir,
-                                          df_extraction_raw_name="bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning_with_sorted_datetime_relations_1.csv",
-                                          df_extraction_name="df_extractions_with_ner_1.csv",
-                                          df_ner_ranking_name="df_ner_ranking_1.csv",
-                                          df_arg_ranking_name="df_arg_ranking_1.csv",
-                                          dataset_name="bridgegate_with_dates",
-                                          regenerate_df_extractions_with_ner_flair_sentences_and_tags=True,
-                                          overwrite_ner_ranking=True
+                                          df_extraction_raw_name=RELATIONSHIPS_RAW_NAME,
+                                          df_extraction_name=DF_EXTRACTION_NAME,
+                                          df_ner_ranking_name=DF_NER_RANKING_NAME,
+                                          df_arg_ranking_name=DF_ARG_RANKING_NAME,
+                                          dataset_name=DATASET,
+                                          regenerate_df_extractions_with_ner_flair_sentences_and_tags=REGENERATE_DF_EXTRACTIONS_WITH_NER_FLAIR_SENTENCES_AND_TAGS,
+                                          overwrite_ner_ranking=OVERWRITE_NER_RANKING
                                           )
-    '''
+
     experiment_visualize_first_mention_of_entities(base_dir, input_file_name="bridgegate_minimal_orig_text_with_dates_with_supervised_cleaning_with_sorted_datetime.csv", create_new_ents_dict=True)
 
 
 
+    # Generate embeddings for visualizing the entities in TensorBoard
+    file_postfix = "top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER)
+    generate_avg_embeddings_for_entities_tensorboard_format(base_dir=base_dir, file_postfix=file_postfix)
 
-    #base_dir = "/Users/behnam/Desktop/Behnam_Files/vwani_text_mining/RE_Behnam/data/FakeNews/Pizzagate/relationship_results/rels_v2_with_pronoun/ner_8_classes/"
-    #main_pizzagate()
-
-
-    #file_postfix = "top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER)
-    #cluster_entities(base_dir=base_dir, file_postfix=file_postfix)
-
-    ''' 
-    #'#''
-    vis = visualizer(base_dir)
-    path_to_entity_emb_dict = base_dir + "entity_embedding_dict_top_130.pkl"
-    path_to_new_ent_dict = base_dir + "dict_new_ents_per_date.pkl"
-    #vis.visualize_clusters(path_to_entity_emb_dict, output_file_name="top_130_entity_clusters.png")
-
-    #'#''
-    embs, ent_names, ent_types, ent_embeddings = vis.load_ent_embedding_dict(path_to_entity_emb_dict)
-    selected_ent_names = []
-    num_selected_ents = 100
-    for ind in range(len(ent_names)):
-        if num_selected_ents <= 0:
-            break
-        if ent_types[ind] != "OTHER(ARG)":
-            selected_ent_names.append(ent_names[ind])
-            num_selected_ents -= 1
-
-    vis.visualize_first_mention_of_entities(selected_ent_names)
-
-    vis.visualize_new_ents_dict(path_to_new_ent_dict)
     '''
+    # Visualize entities into 2D plot using PCA projection
+    vis = visualizer(base_dir)
+    path_to_entity_emb_dict = base_dir + "entity_embedding_dict_top_" + str(NUMBER_OF_ENTITIES_TO_CLUSTER) + ".pkl"
+    vis.visualize_clusters(path_to_entity_emb_dict, output_file_name="top_130_entity_clusters.png")
