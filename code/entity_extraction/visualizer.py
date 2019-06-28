@@ -96,7 +96,7 @@ class visualizer:
         df_pca = pd.DataFrame(data=principalComponents
                                    , columns=['x', 'y'])
         #print(df_pca.head())
-
+        df_pca["types"] = ent_types
 
         fig = plt.figure(figsize=(20, 20))
         ax = fig.add_subplot(1, 1, 1)
@@ -105,10 +105,12 @@ class visualizer:
         ax.set_title('Bert Embeddings of Entities Projected in 2-D using PCA', fontsize=20)
         #'''
         types = list(set(ent_types))
-        cmap = ['r','g','b','c','m','y', 'k','w']#self.get_cmap(len(types))
+        cmap = ['r','g','b','c','k','y']#, 'm','w']#self.get_cmap(len(types))
         type_to_color_mapping = {}
+        type_to_type_mapping = {}
         for ind, t in enumerate(types):
             type_to_color_mapping[t] = cmap[ind]
+            type_to_type_mapping[t] = types[ind]
 
         '''
         for ind, row in df_pca.iterrows():
@@ -123,8 +125,9 @@ class visualizer:
                        , s=50)
 
         '''
-        for ind, t in enumerate(ent_types):
-            ax.scatter(df_pca.iloc[ind]['x'], df_pca.iloc[ind]['y'], c=type_to_color_mapping[t])# c=
+        for ind, t in enumerate(types):#ent_types):
+            ax.scatter(df_pca[df_pca["types"] == t]['x'], df_pca[df_pca["types"] == t]['y'],
+                       c=cmap[ind], label=types[ind])
 
         '''
         for i, txt in enumerate(ent_names):
@@ -135,10 +138,13 @@ class visualizer:
             texts.append(plt.text(x, y, s))
         adjust_text(texts, only_move={'text':'xy'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         print("done")
+        print(types)
+        print(cmap)
         plt.legend(types)
-        plt.show()
+
         plt.savefig(self.base_dir + output_file_name)
 
+        plt.show()
 
     def create_first_mention_of_entities_dict(self, input_file_name, entity_versions, output_name = "dict_new_ents_per_date.pkl", generate_df_with_dates=False):
         if generate_df_with_dates:
