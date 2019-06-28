@@ -62,7 +62,7 @@ Required python version: python 3.6+
 
 **Step-1**: Install required packages:
 ```bash
-pip install -r requirements_python3.txt
+pip3 install -r requirements_python3.txt
 ```
 
 **Step-2**:  Modify the parameters in "main.py". Information about the parameters are commented in the code.
