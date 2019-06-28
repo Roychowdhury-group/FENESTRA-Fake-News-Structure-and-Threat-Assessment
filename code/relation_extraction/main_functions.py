@@ -1608,8 +1608,6 @@ def text_corpus_to_rels(file_input_arg,
                 t_orig = clean_sent(t_orig)
             if SEPARATE_SENT and not LOAD_ANNOTATIONS:
                 t_sentences = sent_tokenize(t_orig)
-                for tmp_ind in range(len(t_sentences)):
-                    t_sentences[tmp_ind] = t_sentences[tmp_ind]
             else:
                 t_sentences = [t_orig]
         except:
@@ -1635,6 +1633,8 @@ def text_corpus_to_rels(file_input_arg,
                 sents[i + 1] = t_sentences[i]
             coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
         except:
+            if PRINT_EXCEPTION_ERRORS:
+                print "Error in coreference resolution"
             pass
         for t_ind, t in enumerate(t_sentences):
             try:
@@ -1642,7 +1642,7 @@ def text_corpus_to_rels(file_input_arg,
                     t_annotated = df.iloc[ind]["annotation"]
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
-                    t_annotated = annots[t_ind]#annotator.getAnnotations(t, dep_parse=True)
+                    t_annotated = annots[t_ind+1]#annotator.getAnnotations(t, dep_parse=True)
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
