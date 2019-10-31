@@ -2,7 +2,7 @@
 This Github includes the source code of our system, FENESTRA, an automated pipeline for the discovery and description of the narrative framework of conspiracy theories that circulate on social media and other forums.
 
 ---
-
+!(https://github.com/Roychowdhury-group/FENESTRA-Fake-News-Structure-and-Threat-Assessment/blob/master/flowchart.png)
 ## Data
 Bridgegate and Pizzagate data can be accessed from this [link](https://oneshare.cdlib.org/stash/dataset/doi:10.5068/D1V665).
 
