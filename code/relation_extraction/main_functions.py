@@ -1,15 +1,15 @@
 from RE_init import *
 from utility_functions import *
-from pycorenlp import StanfordCoreNLP
+from pronoun_resolution_functions import *
+# from pycorenlp import StanfordCoreNLP
 from collections import Counter
 import collections
 import ast
 import json
 from networkx.readwrite.json_graph import node_link_data
-from collections import OrderedDict
+import nltk
 import unicodedata
-from tqdm import tqdm
-
+from collections import OrderedDict
 
 nlp = StanfordCoreNLP('http://localhost:9000')
 def word_to_node_id(verbs_list, verb_ind, annotation):
@@ -52,13 +52,12 @@ def sort_word_ids(word_ids, head_word_ind):
         
     # removing the extra space at the end
     return word_sorted_str.strip(), word_with_pos_sorted_str.strip()
-
 def isPronoun(word):
+    word=word.split('-')[0]
     tagged,tag = nltk.pos_tag([word])[0]
     if "PRP" in tag:
         return True
     return False
-
 def get_verbs(annotation):
     verbs_list = [x[0] for x in annotation["pos"] if "VB" in x[1]]
     return verbs_list
@@ -270,8 +269,7 @@ def get_nested_preposition_rels(g_dir, main_word_id, expansion_list):
     try:
         g_dir_v = g_dir[main_word_id]
     except:
-        ##print "Faild to get adjacency network of ", main_word_id, " while expanding it."
-        pass
+        print "Faild to get adjacency network of ", main_word_id, " while expanding it."
     if g_dir_v is not None:                
         # extract the head words of nested relations (the ones connected with prepositions)
 
@@ -328,7 +326,7 @@ def create_node_attributes(n, annotation):
         n_word, n_pos, n_ind = n.split('-')[0], n.split('-')[1], n.split('-')[2]        
         n_ind = int(n_ind) - 1 # make it 0 base - ROOT becomes "-1"
     except:
-        #print error_msg(error_type="tokenizer")
+        # print error_msg(error_type="tokenizer")
         return None
     #n_pos = annotation['pos'][n_ind][1]
     
@@ -347,7 +345,7 @@ def dp_str_to_node_id(w_ind_str,pos):
         word_ind = int(w_ind_str.split('-')[1])-1
         res = word+"-" + pos[word_ind][1] + "-" + str(word_ind+1)
     except:
-        #print error_msg(error_type="tokenizer")
+        # print error_msg(error_type="tokenizer")
         return
     return res
 
@@ -559,7 +557,7 @@ def get_conj_and_rels(rel, rel_expanded, g_dir, annotation):
         try:
             g_dir_v = g_dir[main_word_id]
         except:
-            ##print "Faild to get adjacency network of ", main_word_id, " while expanding it."
+            # print "Faild to get adjacency network of ", main_word_id, " while expanding it."
             pass
         if g_dir_v is not None:
             for word_id, e in g_dir_v.iteritems():
@@ -804,12 +802,12 @@ def markHeader(arg, header):
     tmp=""
     if not header:
         return "{"+arg+"}"
-    repi = 0
-    while ind > 0 and arg[ind] != " ":
-        ind = ind + arg[ind + 1:].find(header)
-        tmp = arg[0:ind + 1] + "{" + header + "}" + arg[ind + 1 + len(header):]
-        repi += 1
-        if repi > 10:
+    repi=0
+    while ind>0 and arg[ind]!=" ":
+        ind=ind+arg[ind+1:].find(header)
+        tmp=arg[0:ind+1]+"{"+header+"}"+arg[ind+1+len(header):]
+        repi+=1
+        if repi>10:
             return tmp
     if tmp:
         return tmp
@@ -953,8 +951,7 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                     relations_simp += list_svop_rels_simp
 
         # To extract SVP relationships with no object.
-        #if len(nsubj_list) > 0  and len(prep_list) > 0:
-        if len(nsubj_list) > 0 and len(dobj_list) == 0: #and len(prep_list) > 0:
+        if len(nsubj_list) > 0 and len(prep_list) > 0: # and len(dobj_list) == 0
             for s_ind, s in enumerate(nsubj_list):
                 for p_ind, p in enumerate(prep_list):
                     rel = {}
@@ -962,12 +959,10 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                     rel["arg1"] = s
                     rel["arg2"] = p[0]
                     prep_type = prep_list_type[p_ind].split("_")[0]
-
                     if len(dobj_list) == 0:
                         rel["type"] = "SVP"
                     else:
                         rel["type"] = "SVP-O"
-                        
                     if prep_type == "prepc":
                         rel["type"] += "c" #SVPc type
                     rel["pattern"] = "(" + subj_list_type[s_ind] + ", verb (no obj)," + prep_type #taking prep or prepc
@@ -980,7 +975,7 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                     #ex. we have edge prepc_out_of which is connected to "of" node!
                     #we skip these.
                     if rel["arg2"].split("-")[0] == p[1].split("_")[-1]:
-                        #print "prepc weird syntax has been skipped!"
+                        print "prepc weird syntax has been skipped!"
                         #print "sentence: ", annotation
                         #print rel_expanded["arg1"], rel_expanded["rel"], rel_expanded["arg2"]
                         continue
@@ -1024,9 +1019,8 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                         relations_simp.append(rel_simp)
                         break
                 except:
-                    #print t_orig
-                    #print "error happend"
-                    pass
+                    print t_orig
+                    print "error happend"
         elif "A1" in rel and "A2" in rel and "V" in rel:
             temp = rel.pop("V")
             rel["rel"] = "{" + temp + "}"
@@ -1056,9 +1050,8 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                         relations_simp.append(rel_simp)
                         break
                 except:
-                    #print t_orig
-                    #print "error happend"
-                    pass
+                    print t_orig
+                    print "error happend"
         elif "A0" in rel and "A2" in rel and "V" in rel:
             temp = rel.pop("V")
             rel["rel"] = "{" + temp + "}"
@@ -1088,9 +1081,8 @@ def get_relations(g_dir, annotation, EXTRACT_NESTED_PREPOSITIONS_RELS, option="S
                         relations_simp.append(rel_simp)
                         break
                 except:
-                    #print t_orig
-                    #print "error happend"
-                    pass
+                    print t_orig
+                    print "error happend"
 
 
 
@@ -1265,10 +1257,10 @@ def glob_version(entity, entity_versions):
     #entv = {"creature":['creature'], "2nd creature":["second creature"]}
     res -> 2nd creature
     '''
-    #temporary workaround - avoid crashing when there is no "{" or "}"
+    # temporary workaround - avoid crashing when there is no "{" or "}"
     if "{" not in entity and "}" not in entity:
         entity = "{" + entity.strip() + "}"
-    
+
     if not entity:
         return None
     entity_new = ""
@@ -1326,6 +1318,7 @@ def get_simp_df(df,entity_versions):
         if row['arg2']:
             #print row['arg2']
             arg2_new = glob_version(row['arg2'],entity_versions)
+
         #row['arg1'] = arg1_new
         #row['arg2'] = arg2_new
         df.loc[index,'arg1'] = arg1_new
@@ -1362,20 +1355,15 @@ def findWordIDs(t_orig,t_annotated,startIndex,text,sentNum,IsRep):
     res_t=[]
     inds, idis=createMappDictionary1(t_annotated,t_orig)
     tokenized_text = nltk.word_tokenize(text)
-
-
     for j in range(len(tokenized_text)):
         if startIndex+j in inds[tokenized_text[j]]:
             try:
                 res.append(str(idis[startIndex+j]))
-                #+'*'+str(sentNum))
                 res_t.append(str(idis[startIndex+j])+'*'+str(sentNum))
             except:
-                #print "Some thing happend",text
-                continue
+                print "Some thing happend",text
         else:
-            #print "The id don't match",text
-            continue
+            print "The id don't match",text
     if IsRep:
         return res_t
     res_2=[]
@@ -1391,7 +1379,6 @@ def findWordIDs(t_orig,t_annotated,startIndex,text,sentNum,IsRep):
         else:
             res_2.append(res[i_1]+'*'+str(sentNum))
     return res_2
-
 def getheadWord(s):
     res=str(s).split('{')
     if len(res)==1:
@@ -1413,6 +1400,7 @@ def addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESO
         return res_4[1:]
 
     def findCoref(arg_with_pos, arg1):
+        fl=False
         args = arg_with_pos.split(' ')
         args_only = arg1.split(' ')
         index_h = findHindex(args_only)
@@ -1420,6 +1408,7 @@ def addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESO
         rep = ""
         for index, arg in enumerate(args):
             if arg + '*' + str(t_ind+1) in core_map_mens and not rep:
+                fl=isPronoun(arg)
                 if core_map_mens[arg + '*' + str(t_ind+1)] in coref_map_rep:
                     rep = coref_map_rep[core_map_mens[arg + '*' + str(t_ind+1)]]
                     for w in rep:
@@ -1431,6 +1420,7 @@ def addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESO
                         # else:
                         #     ans += ' '+w.replace('{','').replace('}','')
             elif arg + '*' + str(t_ind+1) in core_map_mens and rep:
+                fl=isPronoun(arg)
                 pass
                 # if core_map_mens[arg + '*' + str(t_ind+1)] in coref_map_rep:
                 #     print "This happended when ",rep
@@ -1451,19 +1441,19 @@ def addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESO
                 else:
                     ans += ' ' + arg
         if  rep:
-            return ans
+            return ans,fl
         else:
-            return ""
+            return "",fl
 
     for rel in rels_pure:
         try:
             if 'arg1_with_pos' in rel:
                 arg1_with_pos = rel['arg1_with_pos']
-                fixed_arg1 = findCoref(arg1_with_pos, rel['arg1'])
+                fixed_arg1,fl = findCoref(arg1_with_pos, rel['arg1'])
                 rel['arg1_with_pos_pronoun'] = fixed_arg1[1:]
                 rel['arg1_pronoun']=getArgSimplified(fixed_arg1)
-                if PRONOUN_RESOLUTION:
-                    rel['arg1_orig']=rel['arg1']
+                rel['arg1_orig'] = rel['arg1']
+                if PRONOUN_RESOLUTION and not fl:
                     if rel['arg1_pronoun']:
                         tmp1=rel['arg1_pronoun']
                         while tmp1[0]==' ':
@@ -1476,11 +1466,11 @@ def addPronouns(coref_map_rep, core_map_mens, rels_pure, t_ind, ind,PRONOUN_RESO
 
             if 'arg2_with_pos' in rel:
                 arg2_with_pos = rel['arg2_with_pos']
-                fixed_arg2 = findCoref(arg2_with_pos, rel['arg2'])
+                fixed_arg2,fl = findCoref(arg2_with_pos, rel['arg2'])
                 rel['arg2_with_pos_pronoun'] = fixed_arg2[1:]
                 rel['arg2_pronoun'] = getArgSimplified(fixed_arg2)
-                if PRONOUN_RESOLUTION:
-                    rel['arg2_orig'] = rel['arg2']
+                rel['arg2_orig'] = rel['arg2']
+                if PRONOUN_RESOLUTION and not fl:
                     if rel['arg2_pronoun']:
                         tmp1 = rel['arg2_pronoun']
                         while tmp1[0] == ' ':
@@ -1573,9 +1563,6 @@ def text_corpus_to_rels(file_input_arg,
         header = ["post_num", "sentence_num"] + header
     if DATA_SET=="twitter":
         header = df.columns.values.tolist() + header
-    if DATA_SET=="bridgegate_with_dates":
-        header = df.columns.values.tolist() + header
-        header.remove("text")
     if DATA_SET == "deathreports":
         header = df.columns.values.tolist() + header#[h for h in header if h not in ["sentence"]]
     dict_writer = csv.DictWriter(f_rel, header)
@@ -1586,19 +1573,12 @@ def text_corpus_to_rels(file_input_arg,
     all_rels = []
     output = []
     all_sents_and_annots = []
-    for ind, t_orig in enumerate(tqdm(texts, ascii=True, desc="Relation Extraction From Each Post")):
-        if DATA_SET=="bridgegate_with_dates" and ind == 242: #post 242 causes memory issues "kill 9" error.
-            continue
-        #print ind, " "
-        #print t_orig
+    for ind, t_orig in enumerate(texts):
         try:
-            #t_orig = unicodedata.normalize('NFKD', t_orig).encode('ascii','ignore')
             t_orig = str(t_orig)
-        #t_orig = unicode(t_orig, errors='replace')
+            # t_orig = unicode(t_orig, errors='replace')
         except:
-            #print t_orig
-            #print ind, " "
-            continue
+            pass
         if MAX_ITERATION >= 0:
             if ind > MAX_ITERATION:
                 break
@@ -1608,6 +1588,8 @@ def text_corpus_to_rels(file_input_arg,
                 t_orig = clean_sent(t_orig)
             if SEPARATE_SENT and not LOAD_ANNOTATIONS:
                 t_sentences = sent_tokenize(t_orig)
+                for tmp_ind in range(len(t_sentences)):
+                    t_sentences[tmp_ind] = t_sentences[tmp_ind]
             else:
                 t_sentences = [t_orig]
         except:
@@ -1618,9 +1600,8 @@ def text_corpus_to_rels(file_input_arg,
             output_1 = nlp.annotate(str(t_orig), properties={'annotators': 'coref', 'outputFormat': 'json'})
         except:
             # print t_orig
-            #print "Error with pronoun"
-            #:output_1={}
-            continue
+            print "Error with pronoun"
+            output_1={}
         annots = {}
         g_dirs = {}
         sents = {}
@@ -1633,8 +1614,6 @@ def text_corpus_to_rels(file_input_arg,
                 sents[i + 1] = t_sentences[i]
             coref_map_rep, core_map_mens = getCorefMAp(output_1, annots, g_dirs, sents)
         except:
-            if PRINT_EXCEPTION_ERRORS:
-                print "Error in coreference resolution"
             pass
         for t_ind, t in enumerate(t_sentences):
             try:
@@ -1642,7 +1621,7 @@ def text_corpus_to_rels(file_input_arg,
                     t_annotated = df.iloc[ind]["annotation"]
                     t_annotated = ast.literal_eval(t_annotated) 
                 else:
-                    t_annotated = annots[t_ind+1]#annotator.getAnnotations(t, dep_parse=True)
+                    t_annotated = annotator.getAnnotations(t, dep_parse=True)
                 if SAVE_ALL_SENTENCES_AND_ANNOTATIONS:
                     if "post_num" in df.columns:
                         post_num_tmp = df.iloc[ind]["post_num"]
@@ -1680,9 +1659,9 @@ def text_corpus_to_rels(file_input_arg,
                 print_relations(rels)
                 print "More detailed Version:"
                 print_relations(rels_pure)
-            #else:
-            #    if ind % 1000 == 0:
-            #        print ind,
+            else:
+                if ind % 1000 == 0:
+                    print ind,
             all_rels_str = all_rels_str + get_rels_str(rels) #For simply counting the exact strings
             all_rels = all_rels + rels # to later create a dataframe
             for r in rels:
@@ -1716,10 +1695,7 @@ def text_corpus_to_rels(file_input_arg,
                     #d_final.update(output_row)
                     output_row.update(d_orig[0])
                     #print output_row
-                if DATA_SET == "bridgegate_with_dates":
-                    d_orig = df.iloc[[ind]].to_dict(orient='records')
-                    output_row.update(d_orig[0])
-                    output_row.pop('text', None)
+                   
                 #if DATA_SET == "deathreports":
                 try:
                     dict_writer.writerow(output_row)
@@ -1749,7 +1725,7 @@ def text_corpus_to_rels(file_input_arg,
     #if SAVE_ALL_RELS:
     if len(missing_headers) > 0:
         print "\n%%%%%% NOTE -> headers needed to be added: ", missing_headers , " %%%%%%\n"
-        columns = ['sentence','arg1','rel','arg2','type','pattern','arg1_with_pos','rel_with_pos','arg2_with_pos']
+        columns = ['sentence','arg1','rel','arg2','type','pattern','arg1_with_pos','rel_with_pos','arg2_with_pos',]
         columns = columns + srl_headers + list(missing_headers)
         if KEEP_ORDER_OF_EXTRACTIONS:
             columns = ["post_num", "sentence_num"] + columns
