@@ -4,7 +4,7 @@ This Github includes the source code of our system, FENESTRA, an automated pipel
 ---
 
 ## Data
-Bridgegate and Pizzagate data can be accessed from this [link](https://oneshare.cdlib.org/stash/dataset/doi:10.5068/D1V665).
+Bridgegate and Pizzagate data can be accessed from this [link](https://doi.org/10.25346/S6/VTFXSX).
 
 
 ## Dependencies
